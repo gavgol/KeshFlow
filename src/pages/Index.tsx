@@ -1,24 +1,16 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import AppLayout from "@/components/AppLayout";
 
-const Index = () => {
-  const { user, signOut } = useAuth();
+const Dashboard = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+    <p className="mt-1 text-muted-foreground">Your day at a glance.</p>
+  </div>
+);
 
+export default function Index() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
-      <h1 className="text-3xl font-bold tracking-tight">
-        Welcome to Chameleon
-      </h1>
-      <p className="text-muted-foreground">
-        Signed in as {user?.email}
-      </p>
-      <Button variant="outline" onClick={signOut}>
-        <LogOut />
-        Sign Out
-      </Button>
-    </div>
+    <AppLayout>
+      <Dashboard />
+    </AppLayout>
   );
-};
-
-export default Index;
+}
