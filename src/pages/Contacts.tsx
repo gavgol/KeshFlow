@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,7 +26,6 @@ import {
   Users,
   Loader2,
   X,
-  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -286,7 +284,7 @@ function ContactsContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
-          <p className="text-sm text-muted-foreground">Your rolodex of clients & leads.</p>
+          <p className="text-sm text-muted-foreground">Your rolodex of clients &amp; leads.</p>
         </div>
         <Button onClick={openNew} size="sm" className="gap-1.5">
           <Plus className="h-4 w-4" /> Add

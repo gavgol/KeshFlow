@@ -28,11 +28,13 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragOverEvent,
   PointerSensor,
   TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -56,7 +58,7 @@ import { Tables } from "@/integrations/supabase/types";
 type Stage = Tables<"pipeline_stages">;
 type Deal = Tables<"deals"> & { contact_name?: string | null };
 
-/* ─── Drag-and-drop Deal Card ─────────────────────────────────────── */
+/* ─── Deal Card (pure display) ───────────────────────────────────── */
 function DealCard({
   deal,
   onClick,
@@ -72,16 +74,16 @@ function DealCard({
     <div
       onClick={onClick}
       className={cn(
-        "cursor-pointer rounded-xl border bg-card p-3.5 space-y-2.5 shadow-sm transition-all",
+        "cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2 shadow-sm transition-all",
         "hover:shadow-md hover:border-primary/30",
-        isDragging && "opacity-50 rotate-1 scale-105 shadow-xl"
+        isDragging && "opacity-60 rotate-1 scale-105 shadow-xl"
       )}
     >
-      <p className="text-sm font-semibold leading-tight">{deal.title}</p>
+      <p className="text-sm font-semibold leading-snug">{deal.title}</p>
 
       <div className="flex flex-wrap gap-1.5">
         {deal.value != null && (
-          <Badge variant="secondary" className="text-[11px]">
+          <Badge variant="secondary" className="text-[11px] font-medium">
             {deal.value.toLocaleString()} ₪
           </Badge>
         )}
@@ -116,7 +118,7 @@ function DealCard({
 /* ─── Sortable wrapper ────────────────────────────────────────────── */
 function SortableDealCard({ deal, onClick }: { deal: Deal; onClick?: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: deal.id });
+    useSortable({ id: deal.id, data: { type: "deal", stageId: deal.stage_id } });
 
   return (
     <div
@@ -124,7 +126,6 @@ function SortableDealCard({ deal, onClick }: { deal: Deal; onClick?: () => void 
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn("relative", isDragging && "z-10")}
     >
-      {/* Drag handle */}
       <div
         {...attributes}
         {...listeners}
@@ -140,7 +141,23 @@ function SortableDealCard({ deal, onClick }: { deal: Deal; onClick?: () => void 
   );
 }
 
-/* ─── Column ──────────────────────────────────────────────────────── */
+/* ─── Droppable Column ────────────────────────────────────────────── */
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex flex-col gap-2 p-3 min-h-[5rem] rounded-b-2xl transition-colors",
+        isOver && "bg-primary/5"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ─── Kanban Column ───────────────────────────────────────────────── */
 function KanbanColumn({
   stage,
   deals,
@@ -153,15 +170,15 @@ function KanbanColumn({
   onDealClick: (deal: Deal) => void;
 }) {
   return (
-    <div className="flex flex-col w-72 shrink-0 rounded-2xl bg-muted/40 border border-border/60">
+    <div className="flex flex-col w-[17rem] shrink-0 rounded-2xl bg-muted/50 border border-border/60">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-border/60">
         <div
           className="h-2.5 w-2.5 rounded-full shrink-0"
           style={{ backgroundColor: stage.color }}
         />
         <span className="font-semibold text-sm truncate flex-1">{stage.name}</span>
-        <Badge variant="secondary" className="text-xs shrink-0">
+        <Badge variant="secondary" className="text-xs tabular-nums shrink-0">
           {deals.length}
         </Badge>
         <button
@@ -173,12 +190,12 @@ function KanbanColumn({
         </button>
       </div>
 
-      {/* Cards */}
+      {/* Cards area — droppable */}
       <SortableContext
         items={deals.map((d) => d.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-2 p-3 min-h-[4rem]">
+        <DroppableColumn id={stage.id}>
           {deals.map((deal) => (
             <SortableDealCard
               key={deal.id}
@@ -186,22 +203,23 @@ function KanbanColumn({
               onClick={() => onDealClick(deal)}
             />
           ))}
-        </div>
+          {deals.length === 0 && (
+            <button
+              onClick={() => onAddDeal(stage.id)}
+              className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/60 py-4 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors w-full"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add deal
+            </button>
+          )}
+        </DroppableColumn>
       </SortableContext>
-
-      {deals.length === 0 && (
-        <button
-          onClick={() => onAddDeal(stage.id)}
-          className="m-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/60 py-4 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
-        >
-          <Plus className="h-3.5 w-3.5" /> Add deal
-        </button>
-      )}
     </div>
   );
 }
 
 /* ─── New Deal Sheet ──────────────────────────────────────────────── */
+const NO_CONTACT = "__none__";
+
 function NewDealSheet({
   open,
   defaultStageId,
@@ -221,7 +239,7 @@ function NewDealSheet({
   const [title, setTitle] = useState("");
   const [value, setValue] = useState("");
   const [stageId, setStageId] = useState(defaultStageId ?? "");
-  const [contactId, setContactId] = useState("");
+  const [contactId, setContactId] = useState(NO_CONTACT);
   const [dueDate, setDueDate] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -230,7 +248,7 @@ function NewDealSheet({
       setStageId(defaultStageId ?? stages[0]?.id ?? "");
       setTitle("");
       setValue("");
-      setContactId("");
+      setContactId(NO_CONTACT);
       setDueDate("");
     }
   }, [open, defaultStageId, stages]);
@@ -244,7 +262,7 @@ function NewDealSheet({
         title: title.trim(),
         value: value ? parseFloat(value) : null,
         stage_id: stageId || null,
-        contact_id: contactId || null,
+        contact_id: contactId === NO_CONTACT ? null : contactId,
         due_date: dueDate || null,
       });
       if (error) throw error;
@@ -268,19 +286,33 @@ function NewDealSheet({
         <div className="space-y-4 pb-6">
           <div className="space-y-1.5">
             <Label>Title *</Label>
-            <Input placeholder="e.g. Wedding catering" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input
+              placeholder="e.g. Wedding catering"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              autoFocus
+            />
           </div>
           <div className="space-y-1.5">
-            <Label>Value</Label>
-            <Input placeholder="5000" type="number" value={value} onChange={(e) => setValue(e.target.value)} />
+            <Label>Value (₪)</Label>
+            <Input
+              placeholder="5000"
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Stage</Label>
             <Select value={stageId} onValueChange={setStageId}>
-              <SelectTrigger><SelectValue placeholder="Select stage" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Select stage" />
+              </SelectTrigger>
               <SelectContent>
                 {stages.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -288,20 +320,32 @@ function NewDealSheet({
           <div className="space-y-1.5">
             <Label>Contact</Label>
             <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger><SelectValue placeholder="No contact" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="No contact" />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No contact</SelectItem>
+                <SelectItem value={NO_CONTACT}>No contact</SelectItem>
                 {contacts.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Due Date</Label>
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <Input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
           </div>
-          <Button className="w-full" onClick={handleSave} disabled={saving || !title.trim()}>
+          <Button
+            className="w-full"
+            onClick={handleSave}
+            disabled={saving || !title.trim()}
+          >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Deal"}
           </Button>
         </div>
@@ -321,10 +365,10 @@ function KanbanContent() {
   const [contacts, setContacts] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
-  const [newDealSheet, setNewDealSheet] = useState<{ open: boolean; stageId: string | null }>({
-    open: false,
-    stageId: null,
-  });
+  const [newDealSheet, setNewDealSheet] = useState<{
+    open: boolean;
+    stageId: string | null;
+  }>({ open: false, stageId: null });
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -345,7 +389,11 @@ function KanbanContent() {
         .select("*, contacts(name)")
         .eq("user_id", user.id)
         .order("created_at"),
-      supabase.from("contacts").select("id, name").eq("user_id", user.id).order("name"),
+      supabase
+        .from("contacts")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .order("name"),
     ]);
 
     const myStages = (stagesRes.data ?? []).filter(
@@ -362,34 +410,60 @@ function KanbanContent() {
     setLoading(false);
   }, [user]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const dealsByStage = (stageId: string) => deals.filter((d) => d.stage_id === stageId);
+  const dealsByStage = (stageId: string) =>
+    deals.filter((d) => d.stage_id === stageId);
 
   const handleDragStart = (event: DragStartEvent) => {
     const deal = deals.find((d) => d.id === String(event.active.id));
     setActiveDeal(deal ?? null);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    setActiveDeal(null);
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
-    // Determine the target stage from the over element
-    const overDeal = deals.find((d) => d.id === String(over.id));
-    const targetStageId = overDeal?.stage_id ?? String(over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    if (activeId === overId) return;
+
+    // Determine target stage: could be a stage column droppable or another deal
+    const targetStageId = stages.find((s) => s.id === overId)?.id
+      ?? deals.find((d) => d.id === overId)?.stage_id
+      ?? null;
 
     if (!targetStageId) return;
 
-    const activeId = String(active.id);
-    const draggedDeal = deals.find((d) => d.id === activeId);
-    if (!draggedDeal || draggedDeal.stage_id === targetStageId) return;
-
-    // Optimistic update
     setDeals((prev) =>
-      prev.map((d) => (d.id === activeId ? { ...d, stage_id: targetStageId } : d))
+      prev.map((d) =>
+        d.id === activeId && d.stage_id !== targetStageId
+          ? { ...d, stage_id: targetStageId }
+          : d
+      )
     );
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveDeal(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    // The local state was already updated optimistically in handleDragOver.
+    // Find the current stage of the dragged deal.
+    const draggedDeal = deals.find((d) => d.id === activeId);
+    if (!draggedDeal) return;
+
+    const targetStageId =
+      stages.find((s) => s.id === overId)?.id ??
+      deals.find((d) => d.id === overId)?.stage_id ??
+      draggedDeal.stage_id;
 
     const { error } = await supabase
       .from("deals")
@@ -398,7 +472,7 @@ function KanbanContent() {
 
     if (error) {
       toast.error("Failed to move deal");
-      fetchData(); // revert
+      fetchData(); // revert to server state
     }
   };
 
@@ -425,9 +499,11 @@ function KanbanContent() {
   return (
     <div className="relative flex flex-col min-h-full">
       {/* Header */}
-      <div className="px-4 pt-4 pb-3 md:px-6 md:pt-6">
-        <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
-        <p className="text-sm text-muted-foreground">Manage your deals and pipeline.</p>
+      <div className="px-4 pt-5 pb-3 md:px-6 md:pt-6 border-b border-border/60 bg-background">
+        <h1 className="text-xl font-bold tracking-tight">Pipeline</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Drag cards between columns to update their stage.
+        </p>
       </div>
 
       {/* Board */}
@@ -435,26 +511,30 @@ function KanbanContent() {
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto px-4 pb-8 md:px-6" style={{ scrollSnapType: "x mandatory" }}>
+        <div
+          className="flex gap-3 overflow-x-auto px-4 py-4 pb-24 md:px-6 md:pb-8"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
           {stages.map((stage) => (
             <div key={stage.id} style={{ scrollSnapAlign: "start" }}>
               <KanbanColumn
                 stage={stage}
                 deals={dealsByStage(stage.id)}
                 onAddDeal={(stageId) => setNewDealSheet({ open: true, stageId })}
-                onDealClick={(deal) => {
-                  /* TODO: open deal sheet */
+                onDealClick={() => {
+                  /* TODO: open deal detail sheet */
                 }}
               />
             </div>
           ))}
         </div>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={{ duration: 150, easing: "ease" }}>
           {activeDeal && (
-            <div className="w-72 ps-5">
+            <div className="w-[17rem] ps-5">
               <DealCard deal={activeDeal} isDragging />
             </div>
           )}
@@ -463,7 +543,9 @@ function KanbanContent() {
 
       {/* FAB */}
       <button
-        onClick={() => setNewDealSheet({ open: true, stageId: stages[0]?.id ?? null })}
+        onClick={() =>
+          setNewDealSheet({ open: true, stageId: stages[0]?.id ?? null })
+        }
         className={cn(
           "fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-8",
           isRTL ? "left-4 md:left-6" : "right-4 md:right-6"
