@@ -1,12 +1,374 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { ContactAvatar } from "@/components/ContactAvatar";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Phone,
+  MessageCircle,
+  Pencil,
+  Search,
+  Plus,
+  Users,
+  Loader2,
+  X,
+  Mail,
+} from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { differenceInDays, parseISO, format } from "date-fns";
+import { Tables } from "@/integrations/supabase/types";
+
+type Contact = Tables<"contacts">;
+
+function getFollowUpStatus(contact: Contact): "overdue" | "soon" | "ok" | "none" {
+  if (!contact.last_contact_date || !contact.contact_frequency_days) return "none";
+  const last = parseISO(contact.last_contact_date);
+  const daysSince = differenceInDays(new Date(), last);
+  const freq = contact.contact_frequency_days;
+  if (daysSince >= freq) return "overdue";
+  if (daysSince >= freq * 0.8) return "soon";
+  return "ok";
+}
+
+function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact) => void }) {
+  const status = getFollowUpStatus(contact);
+  const phone = contact.phone?.replace(/\D/g, "") ?? "";
+
+  return (
+    <div className="group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted/40">
+      <ContactAvatar name={contact.name} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="truncate font-semibold text-sm">{contact.name}</span>
+          {status === "overdue" && (
+            <Badge variant="destructive" className="shrink-0 text-[10px] px-1.5 py-0">
+              Overdue
+            </Badge>
+          )}
+          {status === "soon" && (
+            <Badge variant="outline" className="shrink-0 text-[10px] px-1.5 py-0 border-warning/50 text-warning">
+              Soon
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+          {contact.company && <span className="truncate">{contact.company}</span>}
+          {contact.company && contact.last_contact_date && <span>·</span>}
+          {contact.last_contact_date && (
+            <span>Last: {format(parseISO(contact.last_contact_date), "MMM d")}</span>
+          )}
+        </div>
+      </div>
+      {/* Action buttons */}
+      <div className="flex items-center gap-1 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+        {contact.phone && (
+          <a
+            href={`tel:${contact.phone}`}
+            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Call"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Phone className="h-3.5 w-3.5" />
+          </a>
+        )}
+        {phone && (
+          <a
+            href={`https://wa.me/${phone}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors"
+            title="WhatsApp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+          </a>
+        )}
+        <button
+          onClick={() => onEdit(contact)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          title="Edit"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface ContactFormData {
+  name: string;
+  phone: string;
+  email: string;
+  company: string;
+  frequency: number;
+}
+
+function ContactSheet({
+  open,
+  contact,
+  onClose,
+  onSaved,
+}: {
+  open: boolean;
+  contact: Contact | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { user } = useAuth();
+  const [form, setForm] = useState<ContactFormData>({
+    name: "",
+    phone: "",
+    email: "",
+    company: "",
+    frequency: 30,
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (contact) {
+      setForm({
+        name: contact.name,
+        phone: contact.phone ?? "",
+        email: contact.email ?? "",
+        company: contact.company ?? "",
+        frequency: contact.contact_frequency_days ?? 30,
+      });
+    } else {
+      setForm({ name: "", phone: "", email: "", company: "", frequency: 30 });
+    }
+  }, [contact, open]);
+
+  const handleSave = async () => {
+    if (!user || !form.name.trim()) return;
+    setSaving(true);
+    const payload = {
+      name: form.name.trim(),
+      phone: form.phone.trim() || null,
+      email: form.email.trim() || null,
+      company: form.company.trim() || null,
+      contact_frequency_days: form.frequency,
+    };
+    try {
+      if (contact) {
+        const { error } = await supabase.from("contacts").update(payload).eq("id", contact.id);
+        if (error) throw error;
+        toast.success("Contact updated!");
+      } else {
+        const { error } = await supabase.from("contacts").insert({ ...payload, user_id: user.id });
+        if (error) throw error;
+        toast.success("Contact added!");
+      }
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message ?? "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const field = (key: keyof ContactFormData) => ({
+    value: String(form[key]),
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value })),
+  });
+
+  return (
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
+        <SheetHeader className="mb-4">
+          <SheetTitle>{contact ? "Edit Contact" : "New Contact"}</SheetTitle>
+          <SheetDescription>
+            {contact ? "Update contact details." : "Add someone to your rolodex."}
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="space-y-4 pb-6">
+          <div className="space-y-1.5">
+            <Label htmlFor="c-name">Name *</Label>
+            <Input id="c-name" placeholder="Jane Smith" {...field("name")} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="c-phone">Phone</Label>
+            <Input id="c-phone" placeholder="+1 555 000 0000" type="tel" {...field("phone")} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="c-email">Email</Label>
+            <Input id="c-email" placeholder="jane@example.com" type="email" {...field("email")} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="c-company">Company</Label>
+            <Input id="c-company" placeholder="Acme Inc." {...field("company")} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Follow-up frequency</Label>
+              <span className="text-sm font-medium text-primary">Every {form.frequency} days</span>
+            </div>
+            <Slider
+              min={1}
+              max={180}
+              step={1}
+              value={[form.frequency]}
+              onValueChange={([v]) => setForm((f) => ({ ...f, frequency: v }))}
+              className="py-1"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>Daily</span>
+              <span>Monthly</span>
+              <span>6 months</span>
+            </div>
+          </div>
+          <Button className="w-full" onClick={handleSave} disabled={saving || !form.name.trim()}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : contact ? "Save Changes" : "Add Contact"}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function ContactsContent() {
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const isRTL = profile?.locale === "he" || profile?.locale === "ar";
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
+
+  const fetchContacts = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("contacts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("name");
+    setContacts(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchContacts(); }, [user]);
+
+  const filtered = contacts.filter((c) => {
+    const q = search.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      (c.phone ?? "").includes(q) ||
+      (c.company ?? "").toLowerCase().includes(q)
+    );
+  });
+
+  const openNew = () => { setEditContact(null); setSheetOpen(true); };
+  const openEdit = (c: Contact) => { setEditContact(c); setSheetOpen(true); };
+
+  return (
+    <div className="relative min-h-full p-4 md:p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
+          <p className="text-sm text-muted-foreground">Your rolodex of clients & leads.</p>
+        </div>
+        <Button onClick={openNew} size="sm" className="gap-1.5">
+          <Plus className="h-4 w-4" /> Add
+        </Button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name, phone, company…"
+          className="ps-9"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {search && (
+          <button
+            className="absolute end-3 top-1/2 -translate-y-1/2"
+            onClick={() => setSearch("")}
+          >
+            <X className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-14 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        contacts.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No contacts yet"
+            description="Start building your rolodex. Add clients, leads, and collaborators."
+            actionLabel="Add your first contact"
+            onAction={openNew}
+          />
+        ) : (
+          <EmptyState
+            icon={Search}
+            title="No results"
+            description={`No contacts match "${search}". Try a different search.`}
+          />
+        )
+      ) : (
+        <div className="divide-y divide-border/50">
+          {filtered.map((contact) => (
+            <ContactRow key={contact.id} contact={contact} onEdit={openEdit} />
+          ))}
+        </div>
+      )}
+
+      {/* FAB */}
+      <button
+        onClick={openNew}
+        className={cn(
+          "fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-8",
+          isRTL ? "left-4 md:left-6" : "right-4 md:right-6"
+        )}
+        aria-label="Add contact"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+
+      <ContactSheet
+        open={sheetOpen}
+        contact={editContact}
+        onClose={() => setSheetOpen(false)}
+        onSaved={fetchContacts}
+      />
+    </div>
+  );
+}
 
 export default function ContactsPage() {
   return (
     <AppLayout>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
-        <p className="mt-1 text-muted-foreground">Your rolodex of clients and leads.</p>
-      </div>
+      <ContactsContent />
     </AppLayout>
   );
 }
