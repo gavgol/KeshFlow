@@ -1,7 +1,6 @@
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
-// These extended Tailwind palette classes are referenced as string literals
-// so they remain in the bundle (not purged).
 const AVATAR_COLORS = [
   { bg: "bg-violet-100", text: "text-violet-700" },
   { bg: "bg-blue-100", text: "text-blue-700" },
@@ -21,38 +20,43 @@ function getColorIndex(name: string) {
   return Math.abs(hash) % AVATAR_COLORS.length;
 }
 
-interface ContactAvatarProps {
+interface ContactAvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string;
   size?: "sm" | "md" | "lg";
-  className?: string;
 }
 
-export function ContactAvatar({ name, size = "md", className }: ContactAvatarProps) {
-  const color = AVATAR_COLORS[getColorIndex(name)];
-  const sizeClass =
-    size === "sm"
-      ? "h-8 w-8 text-xs"
-      : size === "lg"
-      ? "h-12 w-12 text-base"
-      : "h-10 w-10 text-sm";
+export const ContactAvatar = React.forwardRef<HTMLDivElement, ContactAvatarProps>(
+  ({ name, size = "md", className, ...props }, ref) => {
+    const color = AVATAR_COLORS[getColorIndex(name)];
+    const sizeClass =
+      size === "sm"
+        ? "h-8 w-8 text-xs"
+        : size === "lg"
+        ? "h-12 w-12 text-base"
+        : "h-10 w-10 text-sm";
 
-  const initials = name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
+    const initials = name
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("");
 
-  return (
-    <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-semibold",
-        color.bg,
-        color.text,
-        sizeClass,
-        className
-      )}
-    >
-      {initials || "?"}
-    </div>
-  );
-}
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full font-semibold select-none",
+          color.bg,
+          color.text,
+          sizeClass,
+          className
+        )}
+        {...props}
+      >
+        {initials || "?"}
+      </div>
+    );
+  }
+);
+
+ContactAvatar.displayName = "ContactAvatar";

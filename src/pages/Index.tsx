@@ -34,12 +34,14 @@ function StatCard({
   prefix?: string;
 }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+    <Card className="border-border shadow-sm bg-card">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="h-4 w-4 text-primary" />
+        </div>
       </CardHeader>
       <CardContent>
         <p className="text-2xl font-bold tracking-tight">
@@ -137,7 +139,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="relative min-h-full p-4 md:p-6 space-y-6">
+    <div className="relative min-h-full p-4 md:p-6 space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -169,7 +171,7 @@ function Dashboard() {
       </div>
 
       {/* Who to contact today */}
-      <Card>
+      <Card className="border-border shadow-sm bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <MessageCircle className="h-4 w-4 text-primary" />
@@ -255,7 +257,7 @@ function Dashboard() {
       </Card>
 
       {/* Upcoming Jobs */}
-      <Card>
+      <Card className="border-border shadow-sm bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarDays className="h-4 w-4 text-primary" />
