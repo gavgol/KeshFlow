@@ -96,6 +96,12 @@
   }
 }
 
+/* WhatsApp action color token */
+:root {
+  --whatsapp: 142 70% 49%;
+  --whatsapp-foreground: 0 0% 100%;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -103,5 +109,10 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-bold;
   }
 }
