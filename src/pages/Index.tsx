@@ -1,11 +1,336 @@
 import AppLayout from "@/components/AppLayout";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { useProfile } from "@/hooks/useProfile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Users,
+  Briefcase,
+  DollarSign,
+  MessageCircle,
+  CalendarDays,
+  Smile,
+  Plus,
+  Contact,
+  X,
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-const Dashboard = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-    <p className="mt-1 text-muted-foreground">Your day at a glance.</p>
-  </div>
-);
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  prefix,
+}: {
+  title: string;
+  value: number;
+  icon: React.ElementType;
+  prefix?: string;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold tracking-tight">
+          {prefix}
+          {typeof value === "number" && title.includes("Revenue")
+            ? value.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })
+            : value}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FabMenu({
+  open,
+  onClose,
+  isRTL,
+}: {
+  open: boolean;
+  onClose: () => void;
+  isRTL: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      {/* Menu */}
+      <div
+        className={cn(
+          "fixed bottom-24 z-50 flex flex-col gap-2 md:bottom-8",
+          isRTL ? "left-4 md:left-6 items-start" : "right-4 md:right-6 items-end"
+        )}
+      >
+        <button
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
+        >
+          <Contact className="h-4 w-4 text-primary" />
+          New Contact
+        </button>
+        <button
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
+        >
+          <Briefcase className="h-4 w-4 text-primary" />
+          New Deal
+        </button>
+      </div>
+    </>
+  );
+}
+
+function Dashboard() {
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const { stats, dueContacts, upcomingDeals, loading, refetch } =
+    useDashboardData();
+  const [fabOpen, setFabOpen] = useState(false);
+  const isRTL = profile?.locale === "he" || profile?.locale === "ar";
+
+  const markContacted = async (contactId: string) => {
+    if (!user) return;
+    const today = new Date().toISOString().split("T")[0];
+    await supabase
+      .from("contacts")
+      .update({ last_contact_date: today })
+      .eq("id", contactId);
+    await supabase.from("interactions").insert({
+      user_id: user.id,
+      contact_id: contactId,
+      type: "note",
+      content: "Marked as contacted",
+    });
+    toast.success("Marked as contacted!");
+    refetch();
+  };
+
+  const snoozeContact = async (contactId: string) => {
+    const snoozeDate = new Date();
+    snoozeDate.setDate(snoozeDate.getDate() + 7);
+    const snoozeStr = snoozeDate.toISOString().split("T")[0];
+    await supabase
+      .from("contacts")
+      .update({ last_contact_date: snoozeStr })
+      .eq("id", contactId);
+    toast.success("Snoozed for 1 week!");
+    refetch();
+  };
+
+  return (
+    <div className="relative min-h-full p-4 md:p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {profile?.display_name
+            ? `Welcome back, ${profile.display_name}!`
+            : "Your day at a glance."}
+        </p>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard
+          title="Total Contacts"
+          value={stats.totalContacts}
+          icon={Users}
+        />
+        <StatCard
+          title="Active Deals"
+          value={stats.activeDeals}
+          icon={Briefcase}
+        />
+        <StatCard
+          title="Revenue This Month"
+          value={stats.revenueThisMonth}
+          icon={DollarSign}
+          prefix="$"
+        />
+      </div>
+
+      {/* Who to contact today */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            Who to contact today
+            {dueContacts.length > 0 && (
+              <Badge variant="destructive" className="ms-auto">
+                {dueContacts.length}
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-12 rounded-lg bg-muted animate-pulse"
+                />
+              ))}
+            </div>
+          ) : dueContacts.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <Smile className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">All caught up! 🎉</p>
+              <p className="text-xs text-muted-foreground">
+                No follow-ups due today.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {dueContacts.map((contact) => (
+                <div
+                  key={contact.id}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
+                >
+                  {/* Avatar */}
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {contact.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {contact.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {contact.phone ?? "No phone"}
+                    </p>
+                  </div>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1">
+                    {contact.phone && (
+                      <a
+                        href={`https://wa.me/${contact.phone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                        title="WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </a>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => snoozeContact(contact.id)}
+                    >
+                      Snooze
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-8 px-2 text-xs"
+                      onClick={() => markContacted(contact.id)}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upcoming Jobs */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            Upcoming Jobs
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-14 rounded-lg bg-muted animate-pulse"
+                />
+              ))}
+            </div>
+          ) : upcomingDeals.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <CalendarDays className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">No upcoming jobs</p>
+              <p className="text-xs text-muted-foreground">
+                Deals with due dates will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {upcomingDeals.map((deal) => (
+                <div
+                  key={deal.id}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Briefcase className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-medium">{deal.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {deal.contact_name ?? "No contact"} ·{" "}
+                      {deal.due_date
+                        ? format(parseISO(deal.due_date), "MMM d")
+                        : "No date"}
+                    </p>
+                  </div>
+                  {deal.value != null && (
+                    <span className="text-sm font-semibold text-primary">
+                      ${deal.value.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* FAB */}
+      <button
+        onClick={() => setFabOpen(true)}
+        className={cn(
+          "fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-8",
+          isRTL ? "left-4 md:left-6" : "right-4 md:right-6"
+        )}
+        aria-label="Quick add"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+
+      <FabMenu
+        open={fabOpen}
+        onClose={() => setFabOpen(false)}
+        isRTL={isRTL}
+      />
+    </div>
+  );
+}
 
 export default function Index() {
   return (

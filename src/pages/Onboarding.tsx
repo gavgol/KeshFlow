@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Columns3,
   Target,
+  HelpCircle,
   ArrowRight,
   ArrowLeft,
   Loader2,
@@ -61,12 +62,26 @@ const BUSINESS_TYPES = [
       { name: "Lost", color: "#ef4444", order: 5 },
     ],
   },
+  {
+    id: "other" as const,
+    title: "Other / Custom",
+    description: "Define your own workflow",
+    icon: HelpCircle,
+    defaultView: "kanban",
+    stages: [
+      { name: "Lead", color: "#94a3b8", order: 0 },
+      { name: "Proposal", color: "#6366f1", order: 1 },
+      { name: "In Progress", color: "#f59e0b", order: 2 },
+      { name: "Review", color: "#8b5cf6", order: 3 },
+      { name: "Completed", color: "#22c55e", order: 4 },
+    ],
+  },
 ];
 
 const LOCALES = [
-  { id: "en", label: "English", dir: "LTR" },
-  { id: "he", label: "עברית (Hebrew)", dir: "RTL" },
-  { id: "ar", label: "العربية (Arabic)", dir: "RTL" },
+  { id: "en", label: "English", dir: "LTR", flag: "🇺🇸" },
+  { id: "he", label: "עברית (Hebrew)", dir: "RTL", flag: "🇮🇱" },
+  { id: "ar", label: "العربية (Arabic)", dir: "RTL", flag: "🇸🇦" },
 ];
 
 export default function Onboarding() {
@@ -74,23 +89,30 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [businessType, setBusinessType] = useState<string | null>(null);
+  const [customWorkflow, setCustomWorkflow] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [locale, setLocale] = useState("en");
   const [saving, setSaving] = useState(false);
 
+  const isRTL = locale === "he" || locale === "ar";
   const selectedType = BUSINESS_TYPES.find((t) => t.id === businessType);
 
   const handleComplete = async () => {
     if (!user || !selectedType) return;
     setSaving(true);
 
+    const finalBusinessType =
+      businessType === "other" && customWorkflow.trim()
+        ? customWorkflow.trim()
+        : selectedType.id;
+
     try {
       // 1. Update profile
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          business_type: selectedType.id,
+          business_type: finalBusinessType,
           business_name: businessName || null,
           display_name: displayName || null,
           locale,
@@ -133,24 +155,75 @@ export default function Onboarding() {
     }
   };
 
+  const totalSteps = 3;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="flex min-h-screen items-center justify-center bg-background px-4 py-12 transition-all"
+    >
       <div className="w-full max-w-lg space-y-6">
-        {/* Progress */}
+        {/* Progress dots */}
         <div className="flex items-center justify-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <div
-              key={s}
+              key={i}
               className={cn(
-                "h-2 w-12 rounded-full transition-colors",
-                s <= step ? "bg-primary" : "bg-muted"
+                "h-2 rounded-full transition-all duration-300",
+                i + 1 <= step ? "bg-primary w-12" : "bg-muted w-8"
               )}
             />
           ))}
         </div>
 
-        {/* Step 1: Business Type */}
+        {/* Step 1: Language & Direction */}
         {step === 1 && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold tracking-tight">
+                Choose your language
+              </h1>
+              <p className="mt-1 text-muted-foreground">
+                This sets the text direction for the entire app.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              {LOCALES.map((loc) => (
+                <button
+                  key={loc.id}
+                  onClick={() => setLocale(loc.id)}
+                  className={cn(
+                    "flex items-center justify-between rounded-xl border-2 px-4 py-3 text-start transition-all",
+                    locale === loc.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{loc.flag}</span>
+                    <div>
+                      <div className="font-medium">{loc.label}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {loc.dir}
+                      </div>
+                    </div>
+                  </div>
+                  {locale === loc.id && (
+                    <Check className="h-5 w-5 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <Button className="w-full" onClick={() => setStep(2)}>
+              Continue <ArrowRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
+            </Button>
+          </div>
+        )}
+
+        {/* Step 2: Business Type */}
+        {step === 2 && (
           <div className="space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold tracking-tight">
@@ -183,11 +256,23 @@ export default function Onboarding() {
                   >
                     <type.icon className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="font-semibold">{type.title}</div>
                     <div className="text-sm text-muted-foreground">
                       {type.description}
                     </div>
+                    {/* Custom workflow input for "Other" */}
+                    {type.id === "other" && businessType === "other" && (
+                      <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                        <Input
+                          placeholder="e.g. Photography studio, Event planner..."
+                          value={customWorkflow}
+                          onChange={(e) => setCustomWorkflow(e.target.value)}
+                          className="text-sm"
+                          autoFocus
+                        />
+                      </div>
+                    )}
                   </div>
                   {businessType === type.id && (
                     <Check className="absolute end-4 top-4 h-5 w-5 text-primary" />
@@ -196,18 +281,26 @@ export default function Onboarding() {
               ))}
             </div>
 
-            <Button
-              className="w-full"
-              disabled={!businessType}
-              onClick={() => setStep(2)}
-            >
-              Continue <ArrowRight className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                <ArrowLeft className={cn("h-4 w-4", isRTL && "rotate-180")} /> Back
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={
+                  !businessType ||
+                  (businessType === "other" && !customWorkflow.trim())
+                }
+                onClick={() => setStep(3)}
+              >
+                Continue <ArrowRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* Step 2: Profile Info */}
-        {step === 2 && (
+        {/* Step 3: Profile Info */}
+        {step === 3 && (
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle>Tell us about yourself</CardTitle>
@@ -237,60 +330,10 @@ export default function Onboarding() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(1)}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="h-4 w-4" /> Back
-                </Button>
-                <Button onClick={() => setStep(3)} className="flex-1">
-                  Continue <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 3: Locale */}
-        {step === 3 && (
-          <Card className="border-border/50">
-            <CardHeader>
-              <CardTitle>Language & Direction</CardTitle>
-              <CardDescription>
-                Choose your preferred language. This also sets the text direction.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                {LOCALES.map((loc) => (
-                  <button
-                    key={loc.id}
-                    onClick={() => setLocale(loc.id)}
-                    className={cn(
-                      "flex items-center justify-between rounded-lg border-2 px-4 py-3 text-start transition-all",
-                      locale === loc.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/40"
-                    )}
-                  >
-                    <div>
-                      <div className="font-medium">{loc.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {loc.dir}
-                      </div>
-                    </div>
-                    {locale === loc.id && (
-                      <Check className="h-5 w-5 text-primary" />
-                    )}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
                   onClick={() => setStep(2)}
                   className="flex-1"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Back
+                  <ArrowLeft className={cn("h-4 w-4", isRTL && "rotate-180")} /> Back
                 </Button>
                 <Button
                   onClick={handleComplete}
@@ -301,7 +344,7 @@ export default function Onboarding() {
                     <Loader2 className="animate-spin" />
                   ) : (
                     <>
-                      Get Started <ArrowRight className="h-4 w-4" />
+                      Get Started <ArrowRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
                     </>
                   )}
                 </Button>
