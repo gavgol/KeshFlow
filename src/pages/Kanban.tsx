@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,11 +72,12 @@ function DealCard({
   const isOverdue = deal.due_date ? isPast(parseISO(deal.due_date)) : false;
 
   return (
-    <div
+    <motion.div
       onClick={onClick}
+      whileHover={!isDragging ? { y: -2, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)" } : undefined}
+      transition={{ duration: 0.15 }}
       className={cn(
-        "cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2 shadow-sm transition-all",
-        "hover:shadow-md hover:border-primary/30",
+        "cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2 shadow-sm",
         isDragging && "opacity-60 rotate-1 scale-105 shadow-xl"
       )}
     >
@@ -111,7 +113,7 @@ function DealCard({
           </span>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

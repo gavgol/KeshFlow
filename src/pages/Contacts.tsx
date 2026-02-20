@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,7 +50,12 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
   const phone = contact.phone?.replace(/\D/g, "") ?? "";
 
   return (
-    <div className="group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted/40">
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18 }}
+      className="group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted/40"
+    >
       <ContactAvatar name={contact.name} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -105,7 +111,7 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
           <Pencil className="h-3.5 w-3.5" />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

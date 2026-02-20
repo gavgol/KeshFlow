@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfile } from "@/hooks/useProfile";
 import { BottomTabBar, DesktopSidebar } from "@/components/Navigation";
+import { motion } from "framer-motion";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,10 +25,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
       )}
 
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
-        {children}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="min-h-full"
+        >
+          {children}
+        </motion.div>
       </main>
 
       {isMobile && <BottomTabBar />}
     </div>
   );
 }
+

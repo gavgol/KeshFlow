@@ -13,6 +13,7 @@ import KanbanPage from "./pages/Kanban";
 import ContactsPage from "./pages/Contacts";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import BookingPage from "./pages/BookingPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/kanban" element={<ProtectedRoute><KanbanPage /></ProtectedRoute>} />
             <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/book/:business_slug" element={<BookingPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
