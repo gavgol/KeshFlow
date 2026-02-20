@@ -111,21 +111,21 @@ function NewDealSheet({
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
         <SheetHeader className="mb-4">
-          <SheetTitle>New Deal</SheetTitle>
-          <SheetDescription>Add a deal to your pipeline.</SheetDescription>
+        <SheetTitle>עסקה חדשה</SheetTitle>
+          <SheetDescription>הוסף עסקה לצינור שלך.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 pb-6">
           <div className="space-y-1.5">
-            <Label>Title *</Label>
+            <Label>כותרת *</Label>
             <Input
-              placeholder="e.g. Wedding catering"
+              placeholder="לדוגמה: קייטרינג לחתונה"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Value (₪)</Label>
+            <Label>שווי (₪)</Label>
             <Input
               placeholder="5000"
               type="number"
@@ -134,10 +134,10 @@ function NewDealSheet({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Stage</Label>
+            <Label>שלב</Label>
             <Select value={stageId} onValueChange={setStageId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select stage" />
+                <SelectValue placeholder="בחר שלב" />
               </SelectTrigger>
               <SelectContent>
                 {stages.map((s) => (
@@ -149,13 +149,13 @@ function NewDealSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Contact</Label>
+            <Label>איש קשר</Label>
             <Select value={contactId} onValueChange={setContactId}>
               <SelectTrigger>
-                <SelectValue placeholder="No contact" />
+                <SelectValue placeholder="ללא איש קשר" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_CONTACT}>No contact</SelectItem>
+                <SelectItem value={NO_CONTACT}>ללא איש קשר</SelectItem>
                 {contacts.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -165,7 +165,7 @@ function NewDealSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Date</Label>
+            <Label>תאריך</Label>
             <Input
               type="date"
               value={dueDate}
@@ -177,7 +177,7 @@ function NewDealSheet({
             onClick={handleSave}
             disabled={saving || !title.trim()}
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Deal"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "צור עסקה"}
           </Button>
         </div>
       </SheetContent>
@@ -258,14 +258,14 @@ function CalendarContent() {
     });
   };
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDays = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
   return (
     <div className="relative flex flex-col min-h-full">
       {/* Header */}
       <div className="px-4 pt-5 pb-3 md:px-6 md:pt-6 flex items-center justify-between border-b border-border/60 bg-background">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Calendar</h1>
+          <h1 className="text-xl font-bold tracking-tight">יומן</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(currentMonth, "MMMM yyyy")}
           </p>
@@ -285,7 +285,7 @@ function CalendarContent() {
             onClick={() => setCurrentMonth(new Date())}
             className="h-8 px-2 text-xs"
           >
-            Today
+            היום
           </Button>
           <Button
             variant="ghost"
@@ -397,15 +397,15 @@ function CalendarContent() {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
             <CalendarDays className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
           </div>
-          <p className="text-sm font-medium">No deals on the calendar yet</p>
+          <p className="text-sm font-medium">אין עסקאות ביומן עדיין</p>
           <p className="text-xs text-muted-foreground max-w-xs">
-            Add due dates to your deals and they'll appear here as colorful blocks.
+            הוסף תאריכי יעד לעסקאות שלך והן יופיעו כאן כבלוקים צבעוניים.
           </p>
           <Button
             size="sm"
             onClick={() => setSheetState({ open: true, date: format(new Date(), "yyyy-MM-dd") })}
           >
-            <Plus className="h-4 w-4 me-1" /> Create first deal
+            <Plus className="h-4 w-4 me-1" /> צור עסקה ראשונה
           </Button>
         </div>
       )}

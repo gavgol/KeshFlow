@@ -210,7 +210,7 @@ function KanbanColumn({
               onClick={() => onAddDeal(stage.id)}
               className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/60 py-4 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors w-full"
             >
-              <Plus className="h-3.5 w-3.5" /> Add deal
+              <Plus className="h-3.5 w-3.5" /> הוסף עסקה
             </button>
           )}
         </DroppableColumn>
@@ -282,21 +282,21 @@ function NewDealSheet({
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
         <SheetHeader className="mb-4">
-          <SheetTitle>New Deal</SheetTitle>
-          <SheetDescription>Add a deal to your pipeline.</SheetDescription>
+          <SheetTitle>עסקה חדשה</SheetTitle>
+          <SheetDescription>הוסף עסקה לצינור שלך.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 pb-6">
           <div className="space-y-1.5">
-            <Label>Title *</Label>
+            <Label>כותרת *</Label>
             <Input
-              placeholder="e.g. Wedding catering"
+              placeholder="לדוגמה: קייטרינג לחתונה"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Value (₪)</Label>
+            <Label>שווי (₪)</Label>
             <Input
               placeholder="5000"
               type="number"
@@ -305,10 +305,10 @@ function NewDealSheet({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Stage</Label>
+            <Label>שלב</Label>
             <Select value={stageId} onValueChange={setStageId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select stage" />
+                <SelectValue placeholder="בחר שלב" />
               </SelectTrigger>
               <SelectContent>
                 {stages.map((s) => (
@@ -320,13 +320,13 @@ function NewDealSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Contact</Label>
+            <Label>איש קשר</Label>
             <Select value={contactId} onValueChange={setContactId}>
               <SelectTrigger>
-                <SelectValue placeholder="No contact" />
+                <SelectValue placeholder="ללא איש קשר" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_CONTACT}>No contact</SelectItem>
+                <SelectItem value={NO_CONTACT}>ללא איש קשר</SelectItem>
                 {contacts.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -336,7 +336,7 @@ function NewDealSheet({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Due Date</Label>
+            <Label>תאריך יעד</Label>
             <Input
               type="date"
               value={dueDate}
@@ -348,7 +348,7 @@ function NewDealSheet({
             onClick={handleSave}
             disabled={saving || !title.trim()}
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Deal"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "צור עסקה"}
           </Button>
         </div>
       </SheetContent>
@@ -489,10 +489,10 @@ function KanbanContent() {
   if (stages.length === 0) {
     return (
       <div className="p-4 md:p-6">
-        <EmptyState
+      <EmptyState
           icon={LayoutDashboard}
-          title="No pipeline set up yet"
-          description="Complete the onboarding to automatically generate your pipeline stages."
+          title="אין צינור מכירות עדיין"
+          description="השלם את ה-onboarding כדי ליצור אוטומטית את שלבי הצינור שלך."
         />
       </div>
     );
@@ -502,9 +502,9 @@ function KanbanContent() {
     <div className="relative flex flex-col min-h-full">
       {/* Header */}
       <div className="px-4 pt-5 pb-3 md:px-6 md:pt-6 border-b border-border/60 bg-background">
-        <h1 className="text-xl font-bold tracking-tight">Pipeline</h1>
+        <h1 className="text-xl font-bold tracking-tight">לידים</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Drag cards between columns to update their stage.
+          גרור כרטיסים בין עמודות כדי לעדכן את השלב שלהם.
         </p>
       </div>
 

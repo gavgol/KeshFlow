@@ -13,7 +13,6 @@ import {
   Smile,
   Plus,
   Contact,
-  X,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
@@ -46,7 +45,7 @@ function StatCard({
       <CardContent>
         <p className="text-2xl font-bold tracking-tight">
           {prefix}
-          {typeof value === "number" && title.includes("Revenue")
+          {typeof value === "number" && title.includes("הכנסות")
             ? value.toLocaleString(undefined, {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
@@ -87,14 +86,14 @@ function FabMenu({
           className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
         >
           <Contact className="h-4 w-4 text-primary" />
-          New Contact
+          איש קשר חדש
         </button>
         <button
           onClick={onClose}
           className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
         >
           <Briefcase className="h-4 w-4 text-primary" />
-          New Deal
+          עסקה חדשה
         </button>
       </div>
     </>
@@ -120,9 +119,9 @@ function Dashboard() {
       user_id: user.id,
       contact_id: contactId,
       type: "note",
-      content: "Marked as contacted",
+      content: "סומן כ-פנוי",
     });
-    toast.success("Marked as contacted!");
+    toast.success("סומן כ-נוצר קשר!");
     refetch();
   };
 
@@ -134,7 +133,7 @@ function Dashboard() {
       .from("contacts")
       .update({ last_contact_date: snoozeStr })
       .eq("id", contactId);
-    toast.success("Snoozed for 1 week!");
+    toast.success("נדחה לשבוע!");
     refetch();
   };
 
@@ -142,31 +141,31 @@ function Dashboard() {
     <div className="relative min-h-full p-4 md:p-6 space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">לוח בקרה</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {profile?.display_name
-            ? `Welcome back, ${profile.display_name}!`
-            : "Your day at a glance."}
+            ? `ברוכים הבאים, ${profile.display_name}`
+            : "מבט כולל על היום שלך"}
         </p>
       </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-3">
         <StatCard
-          title="Total Contacts"
+          title="אנשי קשר"
           value={stats.totalContacts}
           icon={Users}
         />
         <StatCard
-          title="Active Deals"
+          title="עסקאות פעילות"
           value={stats.activeDeals}
           icon={Briefcase}
         />
         <StatCard
-          title="Revenue This Month"
+          title="הכנסות החודש"
           value={stats.revenueThisMonth}
           icon={DollarSign}
-          prefix="$"
+          prefix="₪"
         />
       </div>
 
@@ -175,7 +174,7 @@ function Dashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <MessageCircle className="h-4 w-4 text-primary" />
-            Who to contact today
+            מי ליצור קשר היום
             {dueContacts.length > 0 && (
               <Badge variant="destructive" className="ms-auto">
                 {dueContacts.length}
@@ -196,9 +195,9 @@ function Dashboard() {
           ) : dueContacts.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <Smile className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium">All caught up! 🎉</p>
+              <p className="text-sm font-medium">הכל מסודר!</p>
               <p className="text-xs text-muted-foreground">
-                No follow-ups due today.
+                אין מעקבים לביצוע היום.
               </p>
             </div>
           ) : (
@@ -217,7 +216,7 @@ function Dashboard() {
                       {contact.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {contact.phone ?? "No phone"}
+                      {contact.phone ?? "אין טלפון"}
                     </p>
                   </div>
                   {/* Actions */}
@@ -239,14 +238,14 @@ function Dashboard() {
                       className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
                       onClick={() => snoozeContact(contact.id)}
                     >
-                      Snooze
+                      דחה
                     </Button>
                     <Button
                       size="sm"
                       className="h-8 px-2 text-xs"
                       onClick={() => markContacted(contact.id)}
                     >
-                      Done
+                      בוצע
                     </Button>
                   </div>
                 </div>
@@ -261,7 +260,7 @@ function Dashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarDays className="h-4 w-4 text-primary" />
-            Upcoming Jobs
+            עבודות קרובות
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -277,9 +276,9 @@ function Dashboard() {
           ) : upcomingDeals.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <CalendarDays className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium">No upcoming jobs</p>
+              <p className="text-sm font-medium">אין עבודות קרובות</p>
               <p className="text-xs text-muted-foreground">
-                Deals with due dates will appear here.
+                עסקאות עם תאריכי יעד יופיעו כאן.
               </p>
             </div>
           ) : (
@@ -295,15 +294,15 @@ function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-sm font-medium">{deal.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {deal.contact_name ?? "No contact"} ·{" "}
+                      {deal.contact_name ?? "אין איש קשר"} ·{" "}
                       {deal.due_date
-                        ? format(parseISO(deal.due_date), "MMM d")
-                        : "No date"}
+                        ? format(parseISO(deal.due_date), "d/M")
+                        : "אין תאריך"}
                     </p>
                   </div>
                   {deal.value != null && (
                     <span className="text-sm font-semibold text-primary">
-                      ${deal.value.toLocaleString()}
+                      ₪{deal.value.toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -320,7 +319,7 @@ function Dashboard() {
           "fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-8",
           isRTL ? "left-4 md:left-6" : "right-4 md:right-6"
         )}
-        aria-label="Quick add"
+        aria-label="הוספה מהירה"
       >
         <Plus className="h-6 w-6" />
       </button>

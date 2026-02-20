@@ -54,37 +54,37 @@ export default function SettingsPage() {
     <AppLayout>
       <div className="p-4 md:p-6 max-w-xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight">הגדרות</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your account and preferences.
+            ניהול החשבון וההעדפות שלך.
           </p>
         </div>
 
         {/* Profile */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Profile</CardTitle>
-            <CardDescription>Your name and business details.</CardDescription>
+            <CardTitle className="text-base">פרופיל</CardTitle>
+            <CardDescription>השם שלך ופרטי העסק.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Your Name</Label>
+              <Label>השם שלך</Label>
               <Input
-                placeholder="John Doe"
+                placeholder="ישראל ישראלי"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Business Name</Label>
+              <Label>שם העסק</Label>
               <Input
-                placeholder="John's Barbershop"
+                placeholder="הספרייה של ישראל"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
               />
             </div>
             <Button onClick={saveProfile} disabled={saving} size="sm">
-              {saving ? "Saving…" : "Save Changes"}
+              {saving ? "שומר..." : "שמור שינויים"}
             </Button>
           </CardContent>
         </Card>
@@ -94,10 +94,10 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Link2 className="h-4 w-4 text-primary" />
-              Your Public Booking Link
+              קישור ההזמנה הציבורי שלך
             </CardTitle>
             <CardDescription>
-              Share this link with clients so they can book a service. New requests land directly in your pipeline!
+              שתפו את הקישור עם לקוחות כדי שיוכלו לשלוח פנייה. בקשות חדשות מגיעות ישירות לצינור שלך.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -124,12 +124,12 @@ export default function SettingsPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
                 >
-                  Open preview <ExternalLink className="h-3 w-3" />
+                  פתח תצוגה מקדימה <ExternalLink className="h-3 w-3" />
                 </a>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Set a business name above to generate your booking link.
+                הגדר שם עסק למעלה כדי ליצור את קישור ההזמנה שלך.
               </p>
             )}
           </CardContent>
@@ -138,7 +138,7 @@ export default function SettingsPage() {
         {/* Sign out */}
         <Button variant="outline" onClick={signOut} className="gap-2">
           <LogOut className="h-4 w-4" />
-          Sign Out
+          התנתק
         </Button>
       </div>
     </AppLayout>

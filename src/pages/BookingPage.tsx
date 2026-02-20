@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle2, Sparkles, Calendar, User, Phone, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface BusinessInfo {
   userId: string;
@@ -34,7 +33,6 @@ export default function BookingPage() {
   useEffect(() => {
     if (!business_slug) return;
     (async () => {
-      // Look up business by slug (business_name lowercased, spaces→hyphens)
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, business_name")
@@ -54,7 +52,6 @@ export default function BookingPage() {
         return;
       }
 
-      // Get first pipeline stage for this user
       const { data: stagesData } = await supabase
         .from("pipeline_stages")
         .select("id, pipeline_id, display_order, pipelines!inner(user_id)")
@@ -80,7 +77,6 @@ export default function BookingPage() {
     setSaving(true);
 
     try {
-      // 1. Create contact
       const { data: contactData, error: contactError } = await supabase
         .from("contacts")
         .insert({
@@ -96,10 +92,9 @@ export default function BookingPage() {
 
       if (contactError) throw contactError;
 
-      // 2. Create deal in first stage
       const { error: dealError } = await supabase.from("deals").insert({
         user_id: biz.userId,
-        title: `Lead: ${form.name.trim()}`,
+        title: `ליד: ${form.name.trim()}`,
         contact_id: contactData.id,
         stage_id: biz.firstStageId,
         due_date: form.date || null,
@@ -110,7 +105,7 @@ export default function BookingPage() {
 
       setSubmitted(true);
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong. Please try again.");
+      toast.error(err.message ?? "אירעה שגיאה. אנא נסה שוב.");
     } finally {
       setSaving(false);
     }
@@ -128,16 +123,16 @@ export default function BookingPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/20 via-background to-background text-center px-6">
         <div className="text-6xl mb-4">🔍</div>
-        <h1 className="text-2xl font-bold mb-2">Page not found</h1>
+        <h1 className="text-2xl font-bold mb-2">הדף לא נמצא</h1>
         <p className="text-muted-foreground">
-          This booking link doesn't exist or has been deactivated.
+          קישור ההזמנה אינו קיים או שהושבת.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background flex items-center justify-center px-4 py-12">
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background flex items-center justify-center px-4 py-12">
       {/* Decorative blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
@@ -163,7 +158,7 @@ export default function BookingPage() {
                   {biz!.businessName}
                 </h1>
                 <p className="mt-2 text-muted-foreground">
-                  Fill in the form below and we'll get back to you shortly.
+                  מלאו את הטופס ונחזור אליכם בהקדם.
                 </p>
               </div>
 
@@ -172,11 +167,11 @@ export default function BookingPage() {
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-1.5">
                     <Label htmlFor="b-name" className="flex items-center gap-1.5 text-sm font-medium">
-                      <User className="h-3.5 w-3.5 text-primary" /> Your Name *
+                      <User className="h-3.5 w-3.5 text-primary" /> שם מלא *
                     </Label>
                     <Input
                       id="b-name"
-                      placeholder="Jane Smith"
+                      placeholder="ישראל ישראלי"
                       required
                       value={form.name}
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -186,11 +181,11 @@ export default function BookingPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="b-phone" className="flex items-center gap-1.5 text-sm font-medium">
-                      <Phone className="h-3.5 w-3.5 text-primary" /> Phone *
+                      <Phone className="h-3.5 w-3.5 text-primary" /> טלפון *
                     </Label>
                     <Input
                       id="b-phone"
-                      placeholder="+1 555 000 0000"
+                      placeholder="050-000-0000"
                       type="tel"
                       required
                       value={form.phone}
@@ -201,7 +196,7 @@ export default function BookingPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="b-date" className="flex items-center gap-1.5 text-sm font-medium">
-                      <Calendar className="h-3.5 w-3.5 text-primary" /> Preferred Date
+                      <Calendar className="h-3.5 w-3.5 text-primary" /> תאריך מועדף
                     </Label>
                     <Input
                       id="b-date"
@@ -214,11 +209,11 @@ export default function BookingPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="b-notes" className="flex items-center gap-1.5 text-sm font-medium">
-                      <FileText className="h-3.5 w-3.5 text-primary" /> Message (optional)
+                      <FileText className="h-3.5 w-3.5 text-primary" /> הערות (אופציונלי)
                     </Label>
                     <Textarea
                       id="b-notes"
-                      placeholder="Tell us what you need..."
+                      placeholder="ספרו לנו במה אתם צריכים עזרה..."
                       value={form.notes}
                       onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                       className="bg-background/80 border-border/60 focus-visible:border-primary min-h-[90px] resize-none"
@@ -233,13 +228,13 @@ export default function BookingPage() {
                     {saving ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <>Send Request ✨</>
+                      <>שלח פנייה ✨</>
                     )}
                   </Button>
                 </form>
 
                 <p className="text-center text-[11px] text-muted-foreground/70">
-                  Powered by Chameleon CRM
+                  מופעל על ידי Chameleon CRM
                 </p>
               </div>
             </motion.div>
@@ -261,13 +256,13 @@ export default function BookingPage() {
                   <CheckCircle2 className="h-10 w-10 text-success" />
                 </motion.div>
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight">Request sent! 🎉</h2>
+                  <h2 className="text-2xl font-bold tracking-tight">הפנייה נשלחה!</h2>
                   <p className="mt-2 text-muted-foreground">
-                    We've received your details and will be in touch soon.
+                    קיבלנו את הפרטים שלך ונחזור אליך בהקדם.
                   </p>
                 </div>
                 <div className="rounded-2xl bg-muted/50 px-5 py-4 text-sm text-muted-foreground">
-                  <strong className="text-foreground">{form.name}</strong> — we'll contact you at{" "}
+                  <strong className="text-foreground">{form.name}</strong> — ניצור קשר בטלפון{" "}
                   <strong className="text-foreground">{form.phone}</strong>.
                 </div>
               </div>
