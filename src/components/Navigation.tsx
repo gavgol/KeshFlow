@@ -1,5 +1,4 @@
 import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -10,11 +9,11 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/kanban", label: "Kanban", icon: Columns3 },
-  { to: "/contacts", label: "Contacts", icon: Users },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/", label: "לוח בקרה", icon: LayoutDashboard },
+  { to: "/calendar", label: "יומן", icon: CalendarDays },
+  { to: "/kanban", label: "לידים", icon: Columns3 },
+  { to: "/contacts", label: "אנשי קשר", icon: Users },
+  { to: "/settings", label: "הגדרות", icon: Settings },
 ];
 
 export function BottomTabBar() {

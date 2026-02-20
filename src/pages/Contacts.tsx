@@ -62,12 +62,12 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
           <span className="truncate font-semibold text-sm">{contact.name}</span>
           {status === "overdue" && (
             <Badge variant="destructive" className="shrink-0 text-[10px] px-1.5 py-0">
-              Overdue
+              פג תוקף
             </Badge>
           )}
           {status === "soon" && (
             <Badge variant="outline" className="shrink-0 text-[10px] px-1.5 py-0 border-warning/50 text-warning">
-              Soon
+              בקרוב
             </Badge>
           )}
         </div>
@@ -75,7 +75,7 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
           {contact.company && <span className="truncate">{contact.company}</span>}
           {contact.company && contact.last_contact_date && <span>·</span>}
           {contact.last_contact_date && (
-            <span>Last: {format(parseISO(contact.last_contact_date), "MMM d")}</span>
+            <span>קשר אחרון: {format(parseISO(contact.last_contact_date), "d/M")}</span>
           )}
         </div>
       </div>
@@ -197,33 +197,33 @@ function ContactSheet({
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
         <SheetHeader className="mb-4">
-          <SheetTitle>{contact ? "Edit Contact" : "New Contact"}</SheetTitle>
+        <SheetTitle>{contact ? "עריכת איש קשר" : "איש קשר חדש"}</SheetTitle>
           <SheetDescription>
-            {contact ? "Update contact details." : "Add someone to your rolodex."}
+            {contact ? "עדכן את פרטי איש הקשר." : "הוסף לקוח או ליד לרשימה."}
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-4 pb-6">
           <div className="space-y-1.5">
-            <Label htmlFor="c-name">Name *</Label>
-            <Input id="c-name" placeholder="Jane Smith" {...field("name")} />
+            <Label htmlFor="c-name">שם *</Label>
+            <Input id="c-name" placeholder="ישראל ישראלי" {...field("name")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-phone">Phone</Label>
-            <Input id="c-phone" placeholder="+1 555 000 0000" type="tel" {...field("phone")} />
+            <Label htmlFor="c-phone">טלפון</Label>
+            <Input id="c-phone" placeholder="050-000-0000" type="tel" {...field("phone")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-email">Email</Label>
-            <Input id="c-email" placeholder="jane@example.com" type="email" {...field("email")} />
+            <Label htmlFor="c-email">אימייל</Label>
+            <Input id="c-email" placeholder="israel@example.com" type="email" {...field("email")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="c-company">Company</Label>
-            <Input id="c-company" placeholder="Acme Inc." {...field("company")} />
+            <Label htmlFor="c-company">חברה</Label>
+            <Input id="c-company" placeholder="חברה בע״מ" {...field("company")} />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Follow-up frequency</Label>
-              <span className="text-sm font-medium text-primary">Every {form.frequency} days</span>
+              <Label>תדירות מעקב</Label>
+              <span className="text-sm font-medium text-primary">כל {form.frequency} ימים</span>
             </div>
             <Slider
               min={1}
@@ -234,13 +234,13 @@ function ContactSheet({
               className="py-1"
             />
             <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>Daily</span>
-              <span>Monthly</span>
-              <span>6 months</span>
+              <span>יומי</span>
+              <span>חודשי</span>
+              <span>חצי שנה</span>
             </div>
           </div>
           <Button className="w-full" onClick={handleSave} disabled={saving || !form.name.trim()}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : contact ? "Save Changes" : "Add Contact"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : contact ? "שמור שינויים" : "הוסף איש קשר"}
           </Button>
         </div>
       </SheetContent>
@@ -289,11 +289,11 @@ function ContactsContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
-          <p className="text-sm text-muted-foreground">Your rolodex of clients &amp; leads.</p>
+        <h1 className="text-2xl font-bold tracking-tight">אנשי קשר</h1>
+          <p className="text-sm text-muted-foreground">לקוחות ולידים שלך.</p>
         </div>
         <Button onClick={openNew} size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> Add
+          <Plus className="h-4 w-4" /> הוסף
         </Button>
       </div>
 
@@ -301,7 +301,7 @@ function ContactsContent() {
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by name, phone, company…"
+          placeholder="חפש לפי שם, טלפון, חברה..."
           className="ps-9"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -327,16 +327,16 @@ function ContactsContent() {
         contacts.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No contacts yet"
-            description="Start building your rolodex. Add clients, leads, and collaborators."
-            actionLabel="Add your first contact"
+            title="אין אנשי קשר עדיין"
+            description="התחל לבנות את רשימת הלקוחות שלך. הוסף לקוחות, לידים ושותפים."
+            actionLabel="הוסף את איש הקשר הראשון"
             onAction={openNew}
           />
         ) : (
           <EmptyState
             icon={Search}
-            title="No results"
-            description={`No contacts match "${search}". Try a different search.`}
+            title="אין תוצאות"
+            description={`לא נמצאו אנשי קשר עבור "${search}". נסה חיפוש אחר.`}
           />
         )
       ) : (
