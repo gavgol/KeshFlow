@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfile } from "@/hooks/useProfile";
 import { BottomTabBar, DesktopSidebar } from "@/components/Navigation";
@@ -12,10 +12,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { profile } = useProfile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const dir = profile?.locale === "he" || profile?.locale === "ar" ? "rtl" : "ltr";
+  const isRTL = profile?.locale === "he" || profile?.locale === "ar";
+
+  // Apply dir globally to <html> so it persists across route changes without flickering
+  useEffect(() => {
+    document.documentElement.dir = isRTL ? "rtl" : "ltr";
+    document.documentElement.lang = isRTL ? "he" : "en";
+  }, [isRTL]);
 
   return (
-    <div dir={dir} className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-background">
       {!isMobile && (
         <DesktopSidebar
           collapsed={sidebarCollapsed}
@@ -23,7 +29,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
         />
       )}
 
-      {/* Page content — no animation here so sidebar never unmounts */}
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
         {children}
       </main>

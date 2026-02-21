@@ -13,6 +13,7 @@ interface BusinessInfo {
   userId: string;
   businessName: string;
   firstStageId: string | null;
+  logoUrl: string | null;
 }
 
 export default function BookingPage() {
@@ -30,15 +31,21 @@ export default function BookingPage() {
     notes: "",
   });
 
+  // Set RTL on html for this public page
+  useEffect(() => {
+    document.documentElement.dir = "rtl";
+    document.documentElement.lang = "he";
+  }, []);
+
   useEffect(() => {
     if (!business_slug) return;
     (async () => {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, business_name")
+        .select("user_id, business_name, business_logo_url")
         .not("business_name", "is", null);
 
-      const match = (profiles ?? []).find((p) => {
+      const match = (profiles ?? []).find((p: any) => {
         const slug = (p.business_name ?? "")
           .toLowerCase()
           .replace(/\s+/g, "-")
@@ -64,8 +71,9 @@ export default function BookingPage() {
 
       setBiz({
         userId: match.user_id,
-        businessName: match.business_name!,
+        businessName: (match as any).business_name!,
         firstStageId: myStages[0]?.id ?? null,
+        logoUrl: (match as any).business_logo_url ?? null,
       });
       setLoading(false);
     })();
@@ -132,7 +140,7 @@ export default function BookingPage() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background flex items-center justify-center px-4 py-12">
       {/* Decorative blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
@@ -149,11 +157,19 @@ export default function BookingPage() {
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              {/* Header */}
+              {/* Header with Logo */}
               <div className="mb-8 text-center">
-                <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4 ring-1 ring-primary/20">
-                  <Sparkles className="h-8 w-8 text-primary" />
-                </div>
+                {biz!.logoUrl ? (
+                  <img
+                    src={biz!.logoUrl}
+                    alt={biz!.businessName}
+                    className="h-20 w-20 rounded-2xl object-cover mx-auto mb-4 ring-1 ring-primary/20 shadow-lg"
+                  />
+                ) : (
+                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4 ring-1 ring-primary/20">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                  </div>
+                )}
                 <h1 className="text-3xl font-bold tracking-tight">
                   {biz!.businessName}
                 </h1>

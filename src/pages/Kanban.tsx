@@ -50,14 +50,16 @@ import {
   Loader2,
   GripVertical,
   AlertCircle,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { format, parseISO, isPast } from "date-fns";
 import { Tables } from "@/integrations/supabase/types";
 
 type Stage = Tables<"pipeline_stages">;
-type Deal = Tables<"deals"> & { contact_name?: string | null };
+type Deal = Tables<"deals"> & { contact_name?: string | null; contact_phone?: string | null };
 
 /* ─── Deal Card (pure display) ───────────────────────────────────── */
 function DealCard({
@@ -108,9 +110,21 @@ function DealCard({
       {deal.contact_name && (
         <div className="flex items-center gap-1.5">
           <ContactAvatar name={deal.contact_name} size="sm" />
-          <span className="text-xs text-muted-foreground truncate">
+          <span className="text-xs text-muted-foreground truncate flex-1">
             {deal.contact_name}
           </span>
+          {(deal as any).contact_phone && (
+            <a
+              href={buildWhatsAppUrl((deal as any).contact_phone, deal.contact_name, deal.title)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-success/10 text-muted-foreground hover:text-success transition-colors"
+              title="WhatsApp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </a>
+          )}
         </div>
       )}
     </motion.div>
@@ -388,7 +402,7 @@ function KanbanContent() {
         .order("display_order"),
       supabase
         .from("deals")
-        .select("*, contacts(name)")
+        .select("*, contacts(name, phone)")
         .eq("user_id", user.id)
         .order("created_at"),
       supabase
@@ -406,6 +420,7 @@ function KanbanContent() {
     const enrichedDeals: Deal[] = (dealsRes.data ?? []).map((d: any) => ({
       ...d,
       contact_name: d.contacts?.name ?? null,
+      contact_phone: d.contacts?.phone ?? null,
     }));
     setDeals(enrichedDeals);
     setContacts(contactsRes.data ?? []);
@@ -415,6 +430,26 @@ function KanbanContent() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Realtime subscription — new deals appear instantly
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("kanban-deals-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "deals", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          toast.success("ליד חדש התקבל! 🎉");
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchData]);
 
   const dealsByStage = (stageId: string) =>
     deals.filter((d) => d.stage_id === stageId);
