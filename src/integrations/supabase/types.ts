@@ -206,6 +206,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          business_logo_url: string | null
           business_name: string | null
           business_type: string | null
           created_at: string
@@ -218,6 +219,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          business_logo_url?: string | null
           business_name?: string | null
           business_type?: string | null
           created_at?: string
@@ -230,6 +232,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          business_logo_url?: string | null
           business_name?: string | null
           business_type?: string | null
           created_at?: string

@@ -8,6 +8,7 @@ export interface Profile {
   display_name: string | null;
   business_name: string | null;
   business_type: string | null;
+  business_logo_url: string | null;
   locale: string;
   onboarding_completed: boolean;
   default_view: string | null;

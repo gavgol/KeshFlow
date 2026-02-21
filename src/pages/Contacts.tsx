@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { differenceInDays, parseISO, format } from "date-fns";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -93,7 +94,7 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
         )}
         {phone && (
           <a
-            href={`https://wa.me/${phone}`}
+            href={buildWhatsAppUrl(contact.phone!, contact.name)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors"

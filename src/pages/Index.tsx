@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 function StatCard({
   title,
@@ -223,7 +224,7 @@ function Dashboard() {
                   <div className="flex items-center gap-1">
                     {contact.phone && (
                       <a
-                        href={`https://wa.me/${contact.phone.replace(/\D/g, "")}`}
+                        href={buildWhatsAppUrl(contact.phone, contact.name)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"

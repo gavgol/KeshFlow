@@ -5,18 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LogOut, Link2, Copy, Check, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { LogOut, Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2 } from "lucide-react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function SettingsPage() {
   const { signOut, user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, refetch } = useProfile();
   const [copied, setCopied] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [businessName, setBusinessName] = useState(profile?.business_name ?? "");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const logoUrl = (profile as any)?.business_logo_url as string | null;
 
   const slug = (profile?.business_name ?? "")
     .toLowerCase()
@@ -31,7 +35,7 @@ export default function SettingsPage() {
     if (!bookingUrl) return;
     navigator.clipboard.writeText(bookingUrl);
     setCopied(true);
-    toast.success("Link copied!");
+    toast.success("הקישור הועתק!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -47,7 +51,72 @@ export default function SettingsPage() {
       .eq("user_id", user.id);
     setSaving(false);
     if (error) toast.error(error.message);
-    else toast.success("Profile saved!");
+    else {
+      toast.success("הפרופיל נשמר!");
+      refetch();
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("אנא בחר קובץ תמונה");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("הקובץ גדול מדי (מקסימום 2MB)");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/logo.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("deal-photos")
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("deal-photos")
+        .getPublicUrl(path);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ business_logo_url: urlData.publicUrl })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("הלוגו הועלה בהצלחה!");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message ?? "שגיאה בהעלאת הלוגו");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeLogo = async () => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      await supabase
+        .from("profiles")
+        .update({ business_logo_url: null })
+        .eq("user_id", user.id);
+      toast.success("הלוגו הוסר");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -89,6 +158,71 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Business Logo */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-primary" />
+              לוגו העסק
+            </CardTitle>
+            <CardDescription>
+              הלוגו יוצג בדף ההזמנה הציבורי שלך.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {logoUrl ? (
+              <div className="flex items-center gap-4">
+                <img
+                  src={logoUrl}
+                  alt="לוגו העסק"
+                  className="h-16 w-16 rounded-xl object-cover border border-border"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "החלף"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={removeLogo}
+                    disabled={uploading}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center justify-center gap-2 w-full rounded-xl border-2 border-dashed border-border/60 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
+              >
+                {uploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <Upload className="h-5 w-5" />
+                    העלה לוגו
+                  </>
+                )}
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoUpload}
+            />
+          </CardContent>
+        </Card>
+
         {/* Public Booking Link */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-3">
@@ -97,7 +231,7 @@ export default function SettingsPage() {
               קישור ההזמנה הציבורי שלך
             </CardTitle>
             <CardDescription>
-              שתפו את הקישור עם לקוחות כדי שיוכלו לשלוח פנייה. בקשות חדשות מגיעות ישירות לצינור שלך.
+              שתפו את הקישור עם לקוחות כדי שיוכלו לשלוח פנייה.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
