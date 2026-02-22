@@ -6,7 +6,10 @@ import {
   Columns3,
   Users,
   Settings,
+  Moon,
+  Sun,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 const navItems = [
   { to: "/", label: "לוח בקרה", icon: LayoutDashboard },
@@ -56,6 +59,8 @@ export function DesktopSidebar({
   onToggle: () => void;
 }) {
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <aside
@@ -104,6 +109,23 @@ export function DesktopSidebar({
           );
         })}
       </nav>
+
+      {/* Dark mode toggle at bottom */}
+      <div className="border-t border-border p-2">
+        <button
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          )}
+        >
+          {isDark ? (
+            <Sun className="h-4 w-4 shrink-0" />
+          ) : (
+            <Moon className="h-4 w-4 shrink-0" />
+          )}
+          {!collapsed && <span>{isDark ? "מצב בהיר" : "מצב כהה"}</span>}
+        </button>
+      </div>
     </aside>
   );
 }

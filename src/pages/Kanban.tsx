@@ -51,6 +51,7 @@ import {
   GripVertical,
   AlertCircle,
   MessageCircle,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -61,15 +62,17 @@ import { Tables } from "@/integrations/supabase/types";
 type Stage = Tables<"pipeline_stages">;
 type Deal = Tables<"deals"> & { contact_name?: string | null; contact_phone?: string | null };
 
-/* ─── Deal Card (pure display) ───────────────────────────────────── */
+/* ─── Deal Card (Linear-inspired) ─────────────────────────────────── */
 function DealCard({
   deal,
   onClick,
   isDragging = false,
+  isLastColumn = false,
 }: {
   deal: Deal;
   onClick?: () => void;
   isDragging?: boolean;
+  isLastColumn?: boolean;
 }) {
   const isOverdue = deal.due_date ? isPast(parseISO(deal.due_date)) : false;
 
@@ -79,46 +82,52 @@ function DealCard({
       whileHover={!isDragging ? { y: -2, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)" } : undefined}
       transition={{ duration: 0.15 }}
       className={cn(
-        "cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2 shadow-sm",
+        "cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2.5 shadow-sm hover:shadow-md transition-shadow",
         isDragging && "opacity-60 rotate-1 scale-105 shadow-xl"
       )}
     >
-      <p className="text-sm font-semibold leading-snug">{deal.title}</p>
-
-      <div className="flex flex-wrap gap-1.5">
+      {/* Title + Value */}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-semibold leading-snug flex-1">{deal.title}</p>
         {deal.value != null && (
-          <Badge variant="secondary" className="text-[11px] font-medium">
-            {deal.value.toLocaleString()} ₪
-          </Badge>
+          <span className="text-sm font-bold text-primary whitespace-nowrap">
+            ₪{deal.value.toLocaleString()}
+          </span>
         )}
+      </div>
+
+      {/* Badges row */}
+      <div className="flex flex-wrap items-center gap-1.5">
         {deal.due_date && (
           <Badge
             variant="outline"
             className={cn(
-              "text-[11px] gap-1",
+              "text-[11px] gap-1 rounded-full px-2 py-0.5",
               isOverdue
-                ? "border-destructive/50 text-destructive bg-destructive/5"
-                : "text-muted-foreground"
+                ? "border-destructive/50 text-destructive bg-destructive/10"
+                : "text-muted-foreground bg-muted/50"
             )}
           >
             {isOverdue && <AlertCircle className="h-3 w-3" />}
+            <CalendarDays className="h-3 w-3" />
             {format(parseISO(deal.due_date), "MMM d")}
           </Badge>
         )}
       </div>
 
+      {/* Contact row */}
       {deal.contact_name && (
-        <div className="flex items-center gap-1.5">
-          <ContactAvatar name={deal.contact_name} size="sm" />
+        <div className="flex items-center gap-2 pt-0.5">
+          <ContactAvatar name={deal.contact_name} size="sm" className="h-6 w-6 text-[10px]" />
           <span className="text-xs text-muted-foreground truncate flex-1">
             {deal.contact_name}
           </span>
-          {(deal as any).contact_phone && (
+          {deal.contact_phone && (
             <a
-              href={buildWhatsAppUrl((deal as any).contact_phone, deal.contact_name, deal.title)}
+              href={buildWhatsAppUrl(deal.contact_phone, deal.contact_name, deal.title)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-success/10 text-muted-foreground hover:text-success transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-[hsl(var(--whatsapp))]/10 text-muted-foreground hover:text-[hsl(var(--whatsapp))] transition-colors"
               title="WhatsApp"
               onClick={(e) => e.stopPropagation()}
             >
@@ -127,12 +136,30 @@ function DealCard({
           )}
         </div>
       )}
+
+      {/* "Request Review via WhatsApp" for last column */}
+      {isLastColumn && deal.contact_phone && (
+        <a
+          href={buildWhatsAppUrl(
+            deal.contact_phone,
+            deal.contact_name,
+            `${deal.title} - בקשת ביקורת`
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--whatsapp))]/10 text-[hsl(var(--whatsapp))] px-3 py-1.5 text-xs font-medium hover:bg-[hsl(var(--whatsapp))]/20 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Star className="h-3 w-3" />
+          בקש ביקורת ב-WhatsApp
+        </a>
+      )}
     </motion.div>
   );
 }
 
 /* ─── Sortable wrapper ────────────────────────────────────────────── */
-function SortableDealCard({ deal, onClick }: { deal: Deal; onClick?: () => void }) {
+function SortableDealCard({ deal, onClick, isLastColumn }: { deal: Deal; onClick?: () => void; isLastColumn?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: deal.id, data: { type: "deal", stageId: deal.stage_id } });
 
@@ -151,7 +178,7 @@ function SortableDealCard({ deal, onClick }: { deal: Deal; onClick?: () => void 
         <GripVertical className="h-4 w-4 text-muted-foreground/40 hover:text-muted-foreground transition-colors" />
       </div>
       <div className="ps-5">
-        <DealCard deal={deal} onClick={onClick} isDragging={isDragging} />
+        <DealCard deal={deal} onClick={onClick} isDragging={isDragging} isLastColumn={isLastColumn} />
       </div>
     </div>
   );
@@ -164,7 +191,7 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col gap-2 p-3 min-h-[5rem] rounded-b-2xl transition-colors",
+        "flex flex-col gap-2.5 p-3 min-h-[5rem] rounded-b-2xl transition-colors",
         isOver && "bg-primary/5"
       )}
     >
@@ -179,22 +206,24 @@ function KanbanColumn({
   deals,
   onAddDeal,
   onDealClick,
+  isLastColumn,
 }: {
   stage: Stage;
   deals: Deal[];
   onAddDeal: (stageId: string) => void;
   onDealClick: (deal: Deal) => void;
+  isLastColumn: boolean;
 }) {
   return (
-    <div className="flex flex-col w-[17rem] shrink-0 rounded-2xl bg-muted/50 border border-border/60">
+    <div className="flex flex-col w-[17rem] shrink-0 rounded-2xl bg-muted/40 border border-border/50">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-3 border-b border-border/60">
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-border/50">
         <div
-          className="h-2.5 w-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: stage.color }}
+          className="h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-offset-1 ring-offset-muted/40"
+          style={{ backgroundColor: stage.color, boxShadow: `0 0 6px ${stage.color}40` }}
         />
         <span className="font-semibold text-sm truncate flex-1">{stage.name}</span>
-        <Badge variant="secondary" className="text-xs tabular-nums shrink-0">
+        <Badge variant="secondary" className="text-xs tabular-nums shrink-0 rounded-full">
           {deals.length}
         </Badge>
         <button
@@ -217,6 +246,7 @@ function KanbanColumn({
               key={deal.id}
               deal={deal}
               onClick={() => onDealClick(deal)}
+              isLastColumn={isLastColumn}
             />
           ))}
           {deals.length === 0 && (
@@ -454,6 +484,8 @@ function KanbanContent() {
   const dealsByStage = (stageId: string) =>
     deals.filter((d) => d.stage_id === stageId);
 
+  const lastStageId = stages.length > 0 ? stages[stages.length - 1].id : null;
+
   const handleDragStart = (event: DragStartEvent) => {
     const deal = deals.find((d) => d.id === String(event.active.id));
     setActiveDeal(deal ?? null);
@@ -468,7 +500,6 @@ function KanbanContent() {
 
     if (activeId === overId) return;
 
-    // Determine target stage: could be a stage column droppable or another deal
     const targetStageId = stages.find((s) => s.id === overId)?.id
       ?? deals.find((d) => d.id === overId)?.stage_id
       ?? null;
@@ -492,8 +523,6 @@ function KanbanContent() {
     const activeId = String(active.id);
     const overId = String(over.id);
 
-    // The local state was already updated optimistically in handleDragOver.
-    // Find the current stage of the dragged deal.
     const draggedDeal = deals.find((d) => d.id === activeId);
     if (!draggedDeal) return;
 
@@ -509,7 +538,7 @@ function KanbanContent() {
 
     if (error) {
       toast.error("Failed to move deal");
-      fetchData(); // revert to server state
+      fetchData();
     }
   };
 
@@ -564,6 +593,7 @@ function KanbanContent() {
                 onDealClick={() => {
                   /* TODO: open deal detail sheet */
                 }}
+                isLastColumn={stage.id === lastStageId}
               />
             </div>
           ))}

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LogOut, Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2 } from "lucide-react";
+import { LogOut, Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2, Code2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const { signOut, user } = useAuth();
   const { profile, refetch } = useProfile();
   const [copied, setCopied] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [businessName, setBusinessName] = useState(profile?.business_name ?? "");
   const [saving, setSaving] = useState(false);
@@ -31,12 +32,24 @@ export default function SettingsPage() {
     ? `${window.location.origin}/book/${slug}`
     : null;
 
+  const embedCode = bookingUrl
+    ? `<iframe src="${bookingUrl}" width="100%" height="600" frameborder="0" style="border:none;border-radius:12px;"></iframe>`
+    : null;
+
   const copyLink = () => {
     if (!bookingUrl) return;
     navigator.clipboard.writeText(bookingUrl);
     setCopied(true);
     toast.success("הקישור הועתק!");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyEmbed = () => {
+    if (!embedCode) return;
+    navigator.clipboard.writeText(embedCode);
+    setEmbedCopied(true);
+    toast.success("קוד ההטמעה הועתק!");
+    setTimeout(() => setEmbedCopied(false), 2000);
   };
 
   const saveProfile = async () => {
@@ -263,6 +276,53 @@ export default function SettingsPage() {
             ) : (
               <p className="text-sm text-muted-foreground">
                 הגדר שם עסק למעלה כדי ליצור את קישור ההזמנה שלך.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Website Embed */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Code2 className="h-4 w-4 text-primary" />
+              שילוב באתר הקיים
+            </CardTitle>
+            <CardDescription>
+              הטמע את טופס ההזמנה שלך באתר WordPress, Wix או כל אתר אחר.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {embedCode ? (
+              <>
+                <div className="relative rounded-xl border border-border bg-muted/50 p-3">
+                  <pre className="text-xs font-mono text-foreground/80 whitespace-pre-wrap break-all leading-relaxed">
+                    {embedCode}
+                  </pre>
+                  <button
+                    onClick={copyEmbed}
+                    className="absolute top-2 end-2 flex h-8 items-center gap-1.5 rounded-lg bg-background border border-border px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
+                  >
+                    {embedCopied ? (
+                      <>
+                        <Check className="h-3 w-3 text-success" />
+                        הועתק!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        העתק קוד
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  הדבק את הקוד בעורך ה-HTML של האתר שלך כדי להציג את טופס ההזמנה.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                הגדר שם עסק למעלה כדי ליצור את קוד ההטמעה.
               </p>
             )}
           </CardContent>
