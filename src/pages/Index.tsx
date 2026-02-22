@@ -13,34 +13,49 @@ import {
   Smile,
   Plus,
   Contact,
+  TrendingUp,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { useState } from "react";
+import { format, parseISO, subDays } from "date-fns";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
+/* ─── Stat Card ────────────────────────────────────── */
 function StatCard({
   title,
   value,
   icon: Icon,
   prefix,
+  iconBg,
+  iconColor,
 }: {
   title: string;
   value: number;
   icon: React.ElementType;
   prefix?: string;
+  iconBg: string;
+  iconColor: string;
 }) {
   return (
-    <Card className="border-border shadow-sm bg-card">
+    <Card className="border-border shadow-sm hover:shadow-md transition-shadow duration-200 bg-card group">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           {title}
         </CardTitle>
-        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="h-4 w-4 text-primary" />
+        <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", iconBg)}>
+          <Icon className={cn("h-4 w-4", iconColor)} />
         </div>
       </CardHeader>
       <CardContent>
@@ -58,6 +73,81 @@ function StatCard({
   );
 }
 
+/* ─── Revenue Chart ────────────────────────────────── */
+function RevenueChart() {
+  const mockData = useMemo(() => {
+    const today = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = subDays(today, 6 - i);
+      return {
+        day: format(date, "EEE"),
+        revenue: Math.floor(Math.random() * 4000 + 1000),
+      };
+    });
+  }, []);
+
+  return (
+    <Card className="border-border shadow-sm bg-card col-span-full">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            הכנסות השבוע
+          </CardTitle>
+          <Badge variant="secondary" className="text-xs font-normal">7 ימים</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="h-[200px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={mockData} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => `₪${v}`}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "0.75rem",
+                  fontSize: 12,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                }}
+                formatter={(value: number) => [`₪${value.toLocaleString()}`, "הכנסות"]}
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.5}
+                fill="url(#revenueGradient)"
+                dot={false}
+                activeDot={{ r: 5, strokeWidth: 2, fill: "hsl(var(--primary))" }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── FAB Menu ─────────────────────────────────────── */
 function FabMenu({
   open,
   onClose,
@@ -70,12 +160,10 @@ function FabMenu({
   if (!open) return null;
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
         onClick={onClose}
       />
-      {/* Menu */}
       <div
         className={cn(
           "fixed bottom-24 z-50 flex flex-col gap-2 md:bottom-8",
@@ -101,6 +189,7 @@ function FabMenu({
   );
 }
 
+/* ─── Dashboard ────────────────────────────────────── */
 function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -156,19 +245,28 @@ function Dashboard() {
           title="אנשי קשר"
           value={stats.totalContacts}
           icon={Users}
+          iconBg="bg-blue-100 dark:bg-blue-500/20"
+          iconColor="text-blue-600 dark:text-blue-400"
         />
         <StatCard
           title="עסקאות פעילות"
           value={stats.activeDeals}
           icon={Briefcase}
+          iconBg="bg-amber-100 dark:bg-amber-500/20"
+          iconColor="text-amber-600 dark:text-amber-400"
         />
         <StatCard
           title="הכנסות החודש"
           value={stats.revenueThisMonth}
           icon={DollarSign}
           prefix="₪"
+          iconBg="bg-emerald-100 dark:bg-emerald-500/20"
+          iconColor="text-emerald-600 dark:text-emerald-400"
         />
       </div>
+
+      {/* Revenue Chart */}
+      <RevenueChart />
 
       {/* Who to contact today */}
       <Card className="border-border shadow-sm bg-card">
@@ -208,7 +306,6 @@ function Dashboard() {
                   key={contact.id}
                   className="flex items-center gap-3 rounded-lg border border-border p-3"
                 >
-                  {/* Avatar */}
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                     {contact.name.charAt(0).toUpperCase()}
                   </div>
@@ -220,14 +317,13 @@ function Dashboard() {
                       {contact.phone ?? "אין טלפון"}
                     </p>
                   </div>
-                  {/* Actions */}
                   <div className="flex items-center gap-1">
                     {contact.phone && (
                       <a
                         href={buildWhatsAppUrl(contact.phone, contact.name)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--whatsapp))]/10 text-[hsl(var(--whatsapp))] hover:bg-[hsl(var(--whatsapp))]/20 transition-colors"
                         title="WhatsApp"
                       >
                         <MessageCircle className="h-4 w-4" />
