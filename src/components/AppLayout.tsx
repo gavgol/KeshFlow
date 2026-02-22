@@ -1,24 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
+import { Outlet } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfile } from "@/hooks/useProfile";
 import { BottomTabBar, DesktopSidebar } from "@/components/Navigation";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
+const DIR_STORAGE_KEY = "chameleon_dir";
+
+/** Read dir from localStorage synchronously to avoid LTR flash */
+function getStoredDir(): "rtl" | "ltr" {
+  try {
+    const v = localStorage.getItem(DIR_STORAGE_KEY);
+    if (v === "rtl" || v === "ltr") return v;
+  } catch {}
+  return "ltr";
 }
 
-export default function AppLayout({ children }: AppLayoutProps) {
+export function persistDir(dir: "rtl" | "ltr") {
+  try {
+    localStorage.setItem(DIR_STORAGE_KEY, dir);
+  } catch {}
+  document.documentElement.dir = dir;
+  document.documentElement.lang = dir === "rtl" ? "he" : "en";
+}
+
+export default function AppLayout() {
   const isMobile = useIsMobile();
   const { profile } = useProfile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const isRTL = profile?.locale === "he" || profile?.locale === "ar";
+  // Block paint until dir is applied – reads localStorage instantly
+  useLayoutEffect(() => {
+    const stored = getStoredDir();
+    document.documentElement.dir = stored;
+    document.documentElement.lang = stored === "rtl" ? "he" : "en";
+  }, []);
 
-  // Apply dir globally to <html> so it persists across route changes without flickering
-  useEffect(() => {
-    document.documentElement.dir = isRTL ? "rtl" : "ltr";
-    document.documentElement.lang = isRTL ? "he" : "en";
-  }, [isRTL]);
+  // When profile loads, update if needed
+  useLayoutEffect(() => {
+    if (!profile) return;
+    const dir = profile.locale === "he" || profile.locale === "ar" ? "rtl" : "ltr";
+    persistDir(dir);
+  }, [profile?.locale]);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -30,7 +52,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       )}
 
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
-        {children}
+        <Outlet />
       </main>
 
       {isMobile && <BottomTabBar />}

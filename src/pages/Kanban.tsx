@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import AppLayout from "@/components/AppLayout";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -605,9 +605,5 @@ function KanbanContent() {
 }
 
 export default function KanbanPage() {
-  return (
-    <AppLayout>
-      <KanbanContent />
-    </AppLayout>
-  );
+  return <KanbanContent />;
 }

@@ -1,4 +1,4 @@
-import AppLayout from "@/components/AppLayout";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
@@ -120,8 +120,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <AppLayout>
-      <div className="p-4 md:p-6 max-w-xl space-y-6">
+    <div className="p-4 md:p-6 max-w-xl space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">הגדרות</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -274,7 +273,6 @@ export default function SettingsPage() {
           <LogOut className="h-4 w-4" />
           התנתק
         </Button>
-      </div>
-    </AppLayout>
+    </div>
   );
 }
