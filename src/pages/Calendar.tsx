@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import AppLayout from "@/components/AppLayout";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -437,9 +437,5 @@ function CalendarContent() {
 }
 
 export default function CalendarPage() {
-  return (
-    <AppLayout>
-      <CalendarContent />
-    </AppLayout>
-  );
+  return <CalendarContent />;
 }

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AppLayout from "@/components/AppLayout";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Index from "./pages/Index";
@@ -27,12 +28,17 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-            <Route path="/kanban" element={<ProtectedRoute><KanbanPage /></ProtectedRoute>} />
-            <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/book/:business_slug" element={<BookingPage />} />
+
+            {/* Persistent layout – sidebar never unmounts */}
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Index />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/kanban" element={<KanbanPage />} />
+              <Route path="/contacts" element={<ContactsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

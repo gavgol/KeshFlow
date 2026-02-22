@@ -18,6 +18,7 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { persistDir } from "@/components/AppLayout";
 
 const BUSINESS_TYPES = [
   {
@@ -92,8 +93,13 @@ export default function Onboarding() {
   const [customWorkflow, setCustomWorkflow] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [locale, setLocale] = useState("en");
+  const [locale, setLocaleState] = useState("en");
   const [saving, setSaving] = useState(false);
+
+  const setLocale = (l: string) => {
+    setLocaleState(l);
+    persistDir(l === "he" || l === "ar" ? "rtl" : "ltr");
+  };
 
   const isRTL = locale === "he" || locale === "ar";
   const selectedType = BUSINESS_TYPES.find((t) => t.id === businessType);

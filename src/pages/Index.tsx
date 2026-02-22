@@ -1,4 +1,4 @@
-import AppLayout from "@/components/AppLayout";
+
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -335,9 +335,5 @@ function Dashboard() {
 }
 
 export default function Index() {
-  return (
-    <AppLayout>
-      <Dashboard />
-    </AppLayout>
-  );
+  return <Dashboard />;
 }
