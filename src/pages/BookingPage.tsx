@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle2, Sparkles, Calendar, User, Phone, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +21,7 @@ interface BusinessInfo {
   businessName: string;
   firstStageId: string | null;
   logoUrl: string | null;
+  customFieldsSchema: any[];
 }
 
 export default function BookingPage() {
@@ -30,8 +38,8 @@ export default function BookingPage() {
     date: "",
     notes: "",
   });
+  const [customData, setCustomData] = useState<Record<string, string>>({});
 
-  // Set RTL on html for this public page
   useEffect(() => {
     document.documentElement.dir = "rtl";
     document.documentElement.lang = "he";
@@ -42,7 +50,7 @@ export default function BookingPage() {
     (async () => {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, business_name, business_logo_url")
+        .select("user_id, business_name, business_logo_url, custom_fields_schema")
         .not("business_name", "is", null);
 
       const match = (profiles ?? []).find((p: any) => {
@@ -74,6 +82,7 @@ export default function BookingPage() {
         businessName: (match as any).business_name!,
         firstStageId: myStages[0]?.id ?? null,
         logoUrl: (match as any).business_logo_url ?? null,
+        customFieldsSchema: ((match as any).custom_fields_schema as any[]) ?? [],
       });
       setLoading(false);
     })();
@@ -107,10 +116,10 @@ export default function BookingPage() {
         stage_id: biz.firstStageId,
         due_date: form.date || null,
         notes: form.notes.trim() || null,
-      });
+        custom_data: Object.keys(customData).length > 0 ? customData : null,
+      } as any);
 
       if (dealError) throw dealError;
-
       setSubmitted(true);
     } catch (err: any) {
       toast.error(err.message ?? "אירעה שגיאה. אנא נסה שוב.");
@@ -132,16 +141,15 @@ export default function BookingPage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/20 via-background to-background text-center px-6">
         <div className="text-6xl mb-4">🔍</div>
         <h1 className="text-2xl font-bold mb-2">הדף לא נמצא</h1>
-        <p className="text-muted-foreground">
-          קישור ההזמנה אינו קיים או שהושבת.
-        </p>
+        <p className="text-muted-foreground">קישור ההזמנה אינו קיים או שהושבת.</p>
       </div>
     );
   }
 
+  const schema = biz?.customFieldsSchema ?? [];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-background flex items-center justify-center px-4 py-12">
-      {/* Decorative blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
@@ -157,101 +165,92 @@ export default function BookingPage() {
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              {/* Header with Logo */}
               <div className="mb-8 text-center">
                 {biz!.logoUrl ? (
-                  <img
-                    src={biz!.logoUrl}
-                    alt={biz!.businessName}
-                    className="h-20 w-20 rounded-2xl object-cover mx-auto mb-4 ring-1 ring-primary/20 shadow-lg"
-                  />
+                  <img src={biz!.logoUrl} alt={biz!.businessName} className="h-20 w-20 rounded-2xl object-cover mx-auto mb-4 ring-1 ring-primary/20 shadow-lg" />
                 ) : (
                   <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4 ring-1 ring-primary/20">
                     <Sparkles className="h-8 w-8 text-primary" />
                   </div>
                 )}
-                <h1 className="text-3xl font-bold tracking-tight">
-                  {biz!.businessName}
-                </h1>
-                <p className="mt-2 text-muted-foreground">
-                  מלאו את הטופס ונחזור אליכם בהקדם.
-                </p>
+                <h1 className="text-3xl font-bold tracking-tight">{biz!.businessName}</h1>
+                <p className="mt-2 text-muted-foreground">מלאו את הטופס ונחזור אליכם בהקדם.</p>
               </div>
 
-              {/* Glassmorphism card */}
               <div className="rounded-3xl border border-white/30 bg-background/70 backdrop-blur-xl shadow-2xl p-7 space-y-5">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-1.5">
                     <Label htmlFor="b-name" className="flex items-center gap-1.5 text-sm font-medium">
                       <User className="h-3.5 w-3.5 text-primary" /> שם מלא *
                     </Label>
-                    <Input
-                      id="b-name"
-                      placeholder="ישראל ישראלי"
-                      required
-                      value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      className="bg-background/80 border-border/60 focus-visible:border-primary"
-                    />
+                    <Input id="b-name" placeholder="ישראל ישראלי" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="bg-background/80 border-border/60 focus-visible:border-primary" />
                   </div>
-
                   <div className="space-y-1.5">
                     <Label htmlFor="b-phone" className="flex items-center gap-1.5 text-sm font-medium">
                       <Phone className="h-3.5 w-3.5 text-primary" /> טלפון *
                     </Label>
-                    <Input
-                      id="b-phone"
-                      placeholder="050-000-0000"
-                      type="tel"
-                      required
-                      value={form.phone}
-                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                      className="bg-background/80 border-border/60 focus-visible:border-primary"
-                    />
+                    <Input id="b-phone" placeholder="050-000-0000" type="tel" required value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className="bg-background/80 border-border/60 focus-visible:border-primary" />
                   </div>
-
                   <div className="space-y-1.5">
                     <Label htmlFor="b-date" className="flex items-center gap-1.5 text-sm font-medium">
                       <Calendar className="h-3.5 w-3.5 text-primary" /> תאריך מועדף
                     </Label>
-                    <Input
-                      id="b-date"
-                      type="date"
-                      value={form.date}
-                      onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                      className="bg-background/80 border-border/60 focus-visible:border-primary"
-                    />
+                    <Input id="b-date" type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} className="bg-background/80 border-border/60 focus-visible:border-primary" />
                   </div>
+
+                  {/* Dynamic custom fields from business schema */}
+                  {schema.map((field: any) => (
+                    <div key={field.id} className="space-y-1.5">
+                      <Label className="flex items-center gap-1.5 text-sm font-medium">
+                        {field.label}{field.required && " *"}
+                      </Label>
+                      {field.type === "text" && (
+                        <Input
+                          placeholder={field.label}
+                          value={customData[field.id] ?? ""}
+                          onChange={(e) => setCustomData((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                          required={field.required}
+                          className="bg-background/80 border-border/60 focus-visible:border-primary"
+                        />
+                      )}
+                      {field.type === "number" && (
+                        <Input
+                          type="number"
+                          placeholder={field.label}
+                          value={customData[field.id] ?? ""}
+                          onChange={(e) => setCustomData((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                          required={field.required}
+                          className="bg-background/80 border-border/60 focus-visible:border-primary"
+                        />
+                      )}
+                      {field.type === "select" && (
+                        <Select value={customData[field.id] ?? ""} onValueChange={(v) => setCustomData((prev) => ({ ...prev, [field.id]: v }))}>
+                          <SelectTrigger className="bg-background/80 border-border/60">
+                            <SelectValue placeholder={`בחר ${field.label}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(field.options ?? []).map((opt: string) => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  ))}
 
                   <div className="space-y-1.5">
                     <Label htmlFor="b-notes" className="flex items-center gap-1.5 text-sm font-medium">
                       <FileText className="h-3.5 w-3.5 text-primary" /> הערות (אופציונלי)
                     </Label>
-                    <Textarea
-                      id="b-notes"
-                      placeholder="ספרו לנו במה אתם צריכים עזרה..."
-                      value={form.notes}
-                      onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                      className="bg-background/80 border-border/60 focus-visible:border-primary min-h-[90px] resize-none"
-                    />
+                    <Textarea id="b-notes" placeholder="ספרו לנו במה אתם צריכים עזרה..." value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="bg-background/80 border-border/60 focus-visible:border-primary min-h-[90px] resize-none" />
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full h-12 text-base font-semibold rounded-xl"
-                    disabled={saving || !form.name.trim() || !form.phone.trim()}
-                  >
-                    {saving ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>שלח פנייה ✨</>
-                    )}
+                  <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl" disabled={saving || !form.name.trim() || !form.phone.trim()}>
+                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <>שלח פנייה ✨</>}
                   </Button>
                 </form>
 
-                <p className="text-center text-[11px] text-muted-foreground/70">
-                  מופעל על ידי Chameleon CRM
-                </p>
+                <p className="text-center text-[11px] text-muted-foreground/70">מופעל על ידי Chameleon CRM</p>
               </div>
             </motion.div>
           ) : (
@@ -273,9 +272,7 @@ export default function BookingPage() {
                 </motion.div>
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight">הפנייה נשלחה!</h2>
-                  <p className="mt-2 text-muted-foreground">
-                    קיבלנו את הפרטים שלך ונחזור אליך בהקדם.
-                  </p>
+                  <p className="mt-2 text-muted-foreground">קיבלנו את הפרטים שלך ונחזור אליך בהקדם.</p>
                 </div>
                 <div className="rounded-2xl bg-muted/50 px-5 py-4 text-sm text-muted-foreground">
                   <strong className="text-foreground">{form.name}</strong> — ניצור קשר בטלפון{" "}

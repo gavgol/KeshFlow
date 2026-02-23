@@ -273,6 +273,7 @@ function NewDealSheet({
   contacts,
   onClose,
   onSaved,
+  customFieldsSchema,
 }: {
   open: boolean;
   defaultStageId: string | null;
@@ -280,6 +281,7 @@ function NewDealSheet({
   contacts: Array<{ id: string; name: string }>;
   onClose: () => void;
   onSaved: () => void;
+  customFieldsSchema: any[];
 }) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
@@ -288,6 +290,7 @@ function NewDealSheet({
   const [contactId, setContactId] = useState(NO_CONTACT);
   const [dueDate, setDueDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [customData, setCustomData] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open) {
@@ -296,6 +299,7 @@ function NewDealSheet({
       setValue("");
       setContactId(NO_CONTACT);
       setDueDate("");
+      setCustomData({});
     }
   }, [open, defaultStageId, stages]);
 
@@ -310,7 +314,8 @@ function NewDealSheet({
         stage_id: stageId || null,
         contact_id: contactId === NO_CONTACT ? null : contactId,
         due_date: dueDate || null,
-      });
+        custom_data: Object.keys(customData).length > 0 ? customData : null,
+      } as any);
       if (error) throw error;
       toast.success("Deal created!");
       onSaved();
@@ -332,71 +337,88 @@ function NewDealSheet({
         <div className="space-y-4 pb-6">
           <div className="space-y-1.5">
             <Label>כותרת *</Label>
-            <Input
-              placeholder="לדוגמה: קייטרינג לחתונה"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              autoFocus
-            />
+            <Input placeholder="לדוגמה: קייטרינג לחתונה" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
           </div>
           <div className="space-y-1.5">
             <Label>שווי (₪)</Label>
-            <Input
-              placeholder="5000"
-              type="number"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-            />
+            <Input placeholder="5000" type="number" value={value} onChange={(e) => setValue(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>שלב</Label>
             <Select value={stageId} onValueChange={setStageId}>
-              <SelectTrigger>
-                <SelectValue placeholder="בחר שלב" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="בחר שלב" /></SelectTrigger>
               <SelectContent>
-                {stages.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
+                {stages.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>איש קשר</Label>
             <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger>
-                <SelectValue placeholder="ללא איש קשר" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="ללא איש קשר" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_CONTACT}>ללא איש קשר</SelectItem>
-                {contacts.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
+                {contacts.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>תאריך יעד</Label>
-            <Input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
-          <Button
-            className="w-full"
-            onClick={handleSave}
-            disabled={saving || !title.trim()}
-          >
+
+          {/* Dynamic custom fields */}
+          {customFieldsSchema && customFieldsSchema.length > 0 && (
+            <>
+              <div className="border-t border-border/60 pt-3">
+                <p className="text-xs text-muted-foreground font-medium mb-3">שדות מותאמים</p>
+              </div>
+              <CustomFieldsRendererInline schema={customFieldsSchema} values={customData} onChange={setCustomData} />
+            </>
+          )}
+
+          <Button className="w-full" onClick={handleSave} disabled={saving || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "צור עסקה"}
           </Button>
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+/* Inline renderer to avoid circular import */
+function CustomFieldsRendererInline({
+  schema,
+  values,
+  onChange,
+}: {
+  schema: any[];
+  values: Record<string, string>;
+  onChange: (v: Record<string, string>) => void;
+}) {
+  const set = (id: string, val: string) => onChange({ ...values, [id]: val });
+  return (
+    <>
+      {schema.map((field: any) => (
+        <div key={field.id} className="space-y-1.5">
+          <Label className="text-sm">{field.label}{field.required && " *"}</Label>
+          {field.type === "text" && (
+            <Input placeholder={field.label} value={values[field.id] ?? ""} onChange={(e) => set(field.id, e.target.value)} required={field.required} />
+          )}
+          {field.type === "number" && (
+            <Input type="number" placeholder={field.label} value={values[field.id] ?? ""} onChange={(e) => set(field.id, e.target.value)} required={field.required} />
+          )}
+          {field.type === "select" && (
+            <Select value={values[field.id] ?? ""} onValueChange={(v) => set(field.id, v)}>
+              <SelectTrigger><SelectValue placeholder={`בחר ${field.label}`} /></SelectTrigger>
+              <SelectContent>
+                {(field.options ?? []).map((opt: string) => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -629,6 +651,7 @@ function KanbanContent() {
         contacts={contacts}
         onClose={() => setNewDealSheet({ open: false, stageId: null })}
         onSaved={fetchData}
+        customFieldsSchema={((profile as any)?.custom_fields_schema as any[]) ?? []}
       />
     </div>
   );
