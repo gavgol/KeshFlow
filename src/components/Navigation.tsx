@@ -8,6 +8,7 @@ import {
   Settings,
   Moon,
   Sun,
+  Search,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -54,9 +55,11 @@ export function BottomTabBar() {
 export function DesktopSidebar({
   collapsed,
   onToggle,
+  onOpenSearch,
 }: {
   collapsed: boolean;
   onToggle: () => void;
+  onOpenSearch: () => void;
 }) {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -83,6 +86,24 @@ export function DesktopSidebar({
           )}
         >
           <Columns3 className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Search trigger */}
+      <div className="px-2 mb-1">
+        <button
+          onClick={onOpenSearch}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-start">חיפוש...</span>
+              <kbd className="hidden md:inline-flex h-5 items-center gap-0.5 rounded border border-sidebar-border bg-sidebar-accent px-1.5 font-mono text-[10px] text-muted-foreground">
+                ⌘K
+              </kbd>
+            </>
+          )}
         </button>
       </div>
 

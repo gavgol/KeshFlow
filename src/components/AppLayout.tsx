@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfile } from "@/hooks/useProfile";
 import { BottomTabBar, DesktopSidebar } from "@/components/Navigation";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const DIR_STORAGE_KEY = "chameleon_dir";
 
@@ -27,6 +28,7 @@ export default function AppLayout() {
   const isMobile = useIsMobile();
   const { profile } = useProfile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Block paint until dir is applied – reads localStorage instantly
   useLayoutEffect(() => {
@@ -48,6 +50,7 @@ export default function AppLayout() {
         <DesktopSidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onOpenSearch={() => setSearchOpen(true)}
         />
       )}
 
@@ -56,6 +59,7 @@ export default function AppLayout() {
       </main>
 
       {isMobile && <BottomTabBar />}
+      <CommandPalette />
     </div>
   );
 }

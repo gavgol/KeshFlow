@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { ContactAvatar } from "@/components/ContactAvatar";
 import { EmptyState } from "@/components/EmptyState";
+import { SwipeableContactRow } from "@/components/SwipeableContactRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -343,7 +344,9 @@ function ContactsContent() {
       ) : (
         <div className="divide-y divide-border/50">
           {filtered.map((contact) => (
-            <ContactRow key={contact.id} contact={contact} onEdit={openEdit} />
+            <SwipeableContactRow key={contact.id} contact={contact}>
+              <ContactRow contact={contact} onEdit={openEdit} />
+            </SwipeableContactRow>
           ))}
         </div>
       )}
