@@ -60,6 +60,7 @@ export type Database = {
         Row: {
           contact_id: string | null
           created_at: string
+          custom_data: Json | null
           due_date: string | null
           event_date: string | null
           id: string
@@ -73,6 +74,7 @@ export type Database = {
         Insert: {
           contact_id?: string | null
           created_at?: string
+          custom_data?: Json | null
           due_date?: string | null
           event_date?: string | null
           id?: string
@@ -86,6 +88,7 @@ export type Database = {
         Update: {
           contact_id?: string | null
           created_at?: string
+          custom_data?: Json | null
           due_date?: string | null
           event_date?: string | null
           id?: string
@@ -210,6 +213,7 @@ export type Database = {
           business_name: string | null
           business_type: string | null
           created_at: string
+          custom_fields_schema: Json | null
           default_view: string | null
           display_name: string | null
           id: string
@@ -223,6 +227,7 @@ export type Database = {
           business_name?: string | null
           business_type?: string | null
           created_at?: string
+          custom_fields_schema?: Json | null
           default_view?: string | null
           display_name?: string | null
           id?: string
@@ -236,6 +241,7 @@ export type Database = {
           business_name?: string | null
           business_type?: string | null
           created_at?: string
+          custom_fields_schema?: Json | null
           default_view?: string | null
           display_name?: string | null
           id?: string
