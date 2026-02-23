@@ -1,4 +1,5 @@
 
+import { DirectionProvider } from "@radix-ui/react-direction";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,8 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">ניהול החשבון וההעדפות שלך.</p>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
+      <DirectionProvider dir="rtl">
+      <Tabs defaultValue="general" className="w-full" dir="rtl">
         <TabsList className="w-full">
           <TabsTrigger value="general" className="flex-1">כללי</TabsTrigger>
           <TabsTrigger value="custom-fields" className="flex-1 gap-1.5">
@@ -230,6 +232,7 @@ export default function SettingsPage() {
           <CustomFieldsEditor fields={customFieldsSchema} onSaved={refetch} />
         </TabsContent>
       </Tabs>
+      </DirectionProvider>
     </div>
   );
 }
