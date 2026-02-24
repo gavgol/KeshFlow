@@ -10,7 +10,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
-import { User, Briefcase, Search } from "lucide-react";
+import { Briefcase, Search } from "lucide-react";
 import { ContactAvatar } from "@/components/ContactAvatar";
 
 interface SearchResult {
@@ -18,6 +18,13 @@ interface SearchResult {
   type: "contact" | "deal";
   title: string;
   subtitle?: string;
+}
+
+// Singleton event to open the palette from anywhere
+const OPEN_EVENT = "chameleon:open-command-palette";
+
+export function openCommandPalette() {
+  window.dispatchEvent(new CustomEvent(OPEN_EVENT));
 }
 
 export function CommandPalette() {
@@ -28,7 +35,7 @@ export function CommandPalette() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Keyboard shortcut
+  // Keyboard shortcut + custom event
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -36,16 +43,18 @@ export function CommandPalette() {
         setOpen((o) => !o);
       }
     };
+    const onCustomOpen = () => setOpen(true);
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    window.addEventListener(OPEN_EVENT, onCustomOpen);
+    return () => {
+      document.removeEventListener("keydown", down);
+      window.removeEventListener(OPEN_EVENT, onCustomOpen);
+    };
   }, []);
 
   const search = useCallback(
     async (q: string) => {
-      if (!user || !q.trim()) {
-        setResults([]);
-        return;
-      }
+      if (!user || !q.trim()) { setResults([]); return; }
       setLoading(true);
       const term = `%${q.trim()}%`;
 
@@ -66,20 +75,10 @@ export function CommandPalette() {
 
       const items: SearchResult[] = [];
       (contactsRes.data ?? []).forEach((c) =>
-        items.push({
-          id: c.id,
-          type: "contact",
-          title: c.name,
-          subtitle: c.phone || c.company || undefined,
-        })
+        items.push({ id: c.id, type: "contact", title: c.name, subtitle: c.phone || c.company || undefined })
       );
       (dealsRes.data ?? []).forEach((d) =>
-        items.push({
-          id: d.id,
-          type: "deal",
-          title: d.title,
-          subtitle: d.value ? `₪${d.value.toLocaleString()}` : undefined,
-        })
+        items.push({ id: d.id, type: "deal", title: d.title, subtitle: d.value ? `₪${d.value.toLocaleString()}` : undefined })
       );
       setResults(items);
       setLoading(false);
@@ -95,90 +94,44 @@ export function CommandPalette() {
   const handleSelect = (item: SearchResult) => {
     setOpen(false);
     setQuery("");
-    if (item.type === "contact") {
-      navigate("/contacts");
-    } else {
-      navigate("/kanban");
-    }
+    if (item.type === "contact") navigate("/contacts");
+    else navigate("/kanban");
   };
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput
-        placeholder="חפש אנשי קשר, עסקאות..."
-        value={query}
-        onValueChange={setQuery}
-      />
+      <CommandInput placeholder="חפש אנשי קשר, עסקאות..." value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>
-          {loading ? "מחפש..." : "לא נמצאו תוצאות."}
-        </CommandEmpty>
+        <CommandEmpty>{loading ? "מחפש..." : "לא נמצאו תוצאות."}</CommandEmpty>
         {results.filter((r) => r.type === "contact").length > 0 && (
           <CommandGroup heading="אנשי קשר">
-            {results
-              .filter((r) => r.type === "contact")
-              .map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.title}
-                  onSelect={() => handleSelect(item)}
-                  className="gap-3 cursor-pointer"
-                >
-                  <ContactAvatar name={item.title} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-sm">{item.title}</span>
-                    {item.subtitle && (
-                      <span className="block text-xs text-muted-foreground truncate">
-                        {item.subtitle}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
+            {results.filter((r) => r.type === "contact").map((item) => (
+              <CommandItem key={item.id} value={item.title} onSelect={() => handleSelect(item)} className="gap-3 cursor-pointer">
+                <ContactAvatar name={item.title} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-sm">{item.title}</span>
+                  {item.subtitle && <span className="block text-xs text-muted-foreground truncate">{item.subtitle}</span>}
+                </div>
+              </CommandItem>
+            ))}
           </CommandGroup>
         )}
         {results.filter((r) => r.type === "deal").length > 0 && (
           <CommandGroup heading="עסקאות">
-            {results
-              .filter((r) => r.type === "deal")
-              .map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.title}
-                  onSelect={() => handleSelect(item)}
-                  className="gap-3 cursor-pointer"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Briefcase className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-sm">{item.title}</span>
-                    {item.subtitle && (
-                      <span className="block text-xs text-muted-foreground">
-                        {item.subtitle}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
+            {results.filter((r) => r.type === "deal").map((item) => (
+              <CommandItem key={item.id} value={item.title} onSelect={() => handleSelect(item)} className="gap-3 cursor-pointer">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Briefcase className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-sm">{item.title}</span>
+                  {item.subtitle && <span className="block text-xs text-muted-foreground">{item.subtitle}</span>}
+                </div>
+              </CommandItem>
+            ))}
           </CommandGroup>
         )}
       </CommandList>
     </CommandDialog>
-  );
-}
-
-export function CommandTrigger({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-    >
-      <Search className="h-4 w-4 shrink-0" />
-      <span className="flex-1 text-start">חיפוש...</span>
-      <kbd className="hidden md:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
-        ⌘K
-      </kbd>
-    </button>
   );
 }

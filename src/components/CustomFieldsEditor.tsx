@@ -19,9 +19,15 @@ export interface CustomField {
   id: string;
   label: string;
   type: "text" | "number" | "select";
-  options?: string[]; // for select type
+  options?: string[];
   required?: boolean;
 }
+
+const FIELD_TYPE_HINTS: Record<string, string> = {
+  text: 'לדוגמה: "כתובת האירוע"',
+  number: 'לדוגמה: "מספר אורחים"',
+  select: 'לדוגמה: "סוג תספורת"',
+};
 
 interface Props {
   fields: CustomField[];
@@ -36,13 +42,7 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
   const addField = () => {
     setFields((prev) => [
       ...prev,
-      {
-        id: crypto.randomUUID(),
-        label: "",
-        type: "text",
-        options: [],
-        required: false,
-      },
+      { id: crypto.randomUUID(), label: "", type: "text", options: [], required: false },
     ]);
   };
 
@@ -56,18 +56,13 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
 
   const handleSave = async () => {
     if (!user) return;
-    // Validate
     for (const f of fields) {
-      if (!f.label.trim()) {
-        toast.error("כל שדה חייב לכלול שם");
-        return;
-      }
+      if (!f.label.trim()) { toast.error("כל שדה חייב לכלול שם"); return; }
       if (f.type === "select" && (!f.options || f.options.filter(Boolean).length < 2)) {
         toast.error(`שדה "${f.label}" מסוג בחירה חייב לכלול לפחות 2 אפשרויות`);
         return;
       }
     }
-
     setSaving(true);
     const cleaned = fields.map((f) => ({
       id: f.id,
@@ -83,12 +78,8 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
       .eq("user_id", user.id);
 
     setSaving(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("שדות מותאמים נשמרו!");
-      onSaved();
-    }
+    if (error) { toast.error(error.message); }
+    else { toast.success("שדות מותאמים נשמרו!"); onSaved(); }
   };
 
   return (
@@ -110,20 +101,12 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
         )}
 
         {fields.map((field, idx) => (
-          <div
-            key={field.id}
-            className="rounded-xl border border-border bg-muted/30 p-3.5 space-y-3"
-          >
+          <div key={field.id} className="rounded-xl border border-border bg-muted/30 p-3.5 space-y-3">
             <div className="flex items-center gap-2">
               <GripVertical className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-              <span className="text-xs text-muted-foreground font-medium">
-                שדה {idx + 1}
-              </span>
+              <span className="text-xs text-muted-foreground font-medium">שדה {idx + 1}</span>
               <div className="flex-1" />
-              <button
-                onClick={() => removeField(field.id)}
-                className="text-destructive/70 hover:text-destructive transition-colors"
-              >
+              <button onClick={() => removeField(field.id)} className="text-destructive/70 hover:text-destructive transition-colors">
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -157,6 +140,9 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
                     <SelectItem value="select">בחירה מרשימה</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {FIELD_TYPE_HINTS[field.type]}
+                </p>
               </div>
             </div>
 
@@ -191,9 +177,7 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    updateField(field.id, { options: [...(field.options ?? []), ""] })
-                  }
+                  onClick={() => updateField(field.id, { options: [...(field.options ?? []), ""] })}
                   className="text-xs"
                 >
                   <Plus className="h-3 w-3 me-1" /> הוסף אפשרות
