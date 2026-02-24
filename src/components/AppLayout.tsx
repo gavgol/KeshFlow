@@ -7,7 +7,6 @@ import { CommandPalette } from "@/components/CommandPalette";
 
 const DIR_STORAGE_KEY = "chameleon_dir";
 
-/** Read dir from localStorage synchronously to avoid LTR flash */
 function getStoredDir(): "rtl" | "ltr" {
   try {
     const v = localStorage.getItem(DIR_STORAGE_KEY);
@@ -17,9 +16,7 @@ function getStoredDir(): "rtl" | "ltr" {
 }
 
 export function persistDir(dir: "rtl" | "ltr") {
-  try {
-    localStorage.setItem(DIR_STORAGE_KEY, dir);
-  } catch {}
+  try { localStorage.setItem(DIR_STORAGE_KEY, dir); } catch {}
   document.documentElement.dir = dir;
   document.documentElement.lang = dir === "rtl" ? "he" : "en";
 }
@@ -28,16 +25,13 @@ export default function AppLayout() {
   const isMobile = useIsMobile();
   const { profile } = useProfile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
 
-  // Block paint until dir is applied – reads localStorage instantly
   useLayoutEffect(() => {
     const stored = getStoredDir();
     document.documentElement.dir = stored;
     document.documentElement.lang = stored === "rtl" ? "he" : "en";
   }, []);
 
-  // When profile loads, update if needed
   useLayoutEffect(() => {
     if (!profile) return;
     const dir = profile.locale === "he" || profile.locale === "ar" ? "rtl" : "ltr";
@@ -50,7 +44,6 @@ export default function AppLayout() {
         <DesktopSidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onOpenSearch={() => setSearchOpen(true)}
         />
       )}
 

@@ -43,6 +43,8 @@ import {
   parseISO,
   addMonths,
   subMonths,
+  setMonth,
+  setYear,
 } from "date-fns";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -50,6 +52,11 @@ type Stage = Tables<"pipeline_stages">;
 type Deal = Tables<"deals"> & { contact_name?: string | null; stage_color?: string };
 
 const NO_CONTACT = "__none__";
+
+const MONTH_NAMES_HE = [
+  "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
+  "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר",
+];
 
 function NewDealSheet({
   open,
@@ -111,72 +118,42 @@ function NewDealSheet({
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto">
         <SheetHeader className="mb-4">
-        <SheetTitle>עסקה חדשה</SheetTitle>
+          <SheetTitle>עסקה חדשה</SheetTitle>
           <SheetDescription>הוסף עסקה לצינור שלך.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 pb-6">
           <div className="space-y-1.5">
             <Label>כותרת *</Label>
-            <Input
-              placeholder="לדוגמה: קייטרינג לחתונה"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              autoFocus
-            />
+            <Input placeholder="לדוגמה: קייטרינג לחתונה" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
           </div>
           <div className="space-y-1.5">
             <Label>שווי (₪)</Label>
-            <Input
-              placeholder="5000"
-              type="number"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-            />
+            <Input placeholder="5000" type="number" value={value} onChange={(e) => setValue(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>שלב</Label>
             <Select value={stageId} onValueChange={setStageId}>
-              <SelectTrigger>
-                <SelectValue placeholder="בחר שלב" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="בחר שלב" /></SelectTrigger>
               <SelectContent>
-                {stages.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
+                {stages.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>איש קשר</Label>
             <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger>
-                <SelectValue placeholder="ללא איש קשר" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="ללא איש קשר" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_CONTACT}>ללא איש קשר</SelectItem>
-                {contacts.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
+                {contacts.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>תאריך</Label>
-            <Input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
-          <Button
-            className="w-full"
-            onClick={handleSave}
-            disabled={saving || !title.trim()}
-          >
+          <Button className="w-full" onClick={handleSave} disabled={saving || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "צור עסקה"}
           </Button>
         </div>
@@ -252,13 +229,17 @@ function CalendarContent() {
     });
 
   const handleDayClick = (day: Date) => {
-    setSheetState({
-      open: true,
-      date: format(day, "yyyy-MM-dd"),
-    });
+    setSheetState({ open: true, date: format(day, "yyyy-MM-dd") });
   };
 
   const weekDays = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+
+  const currentYear = currentMonth.getFullYear();
+  const yearOptions = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
+
+  // In RTL: "next" arrow should visually point left, "prev" should point right
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
 
   return (
     <div className="relative flex flex-col min-h-full">
@@ -266,34 +247,45 @@ function CalendarContent() {
       <div className="px-4 pt-5 pb-3 md:px-6 md:pt-6 flex items-center justify-between border-b border-border/60 bg-background">
         <div>
           <h1 className="text-xl font-bold tracking-tight">יומן</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {format(currentMonth, "MMMM yyyy")}
-          </p>
+          {/* Month & Year selectors */}
+          <div className="flex items-center gap-2 mt-1">
+            <Select
+              value={String(currentMonth.getMonth())}
+              onValueChange={(v) => setCurrentMonth((m) => setMonth(m, parseInt(v)))}
+            >
+              <SelectTrigger className="h-7 w-auto gap-1 border-none bg-transparent px-1 text-sm font-medium shadow-none focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_NAMES_HE.map((name, i) => (
+                  <SelectItem key={i} value={String(i)}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={String(currentYear)}
+              onValueChange={(v) => setCurrentMonth((m) => setYear(m, parseInt(v)))}
+            >
+              <SelectTrigger className="h-7 w-auto gap-1 border-none bg-transparent px-1 text-sm font-medium shadow-none focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="h-4 w-4" />
+          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
+            <PrevIcon className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentMonth(new Date())}
-            className="h-8 px-2 text-xs"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-2 text-xs">
             היום
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
+            <NextIcon className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -307,10 +299,7 @@ function CalendarContent() {
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
             {weekDays.map((d) => (
-              <div
-                key={d}
-                className="py-1 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wide"
-              >
+              <div key={d} className="py-1 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 {d}
               </div>
             ))}
@@ -320,9 +309,9 @@ function CalendarContent() {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentMonth.toISOString()}
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
               transition={{ duration: 0.2 }}
               className="grid grid-cols-7 gap-px bg-border/40 rounded-xl overflow-hidden border border-border/40"
             >
@@ -365,7 +354,7 @@ function CalendarContent() {
                       ))}
                       {dayDeals.length > 3 && (
                         <div className="text-[10px] text-muted-foreground ps-1">
-                          +{dayDeals.length - 3} more
+                          +{dayDeals.length - 3}
                         </div>
                       )}
                     </div>
@@ -375,18 +364,17 @@ function CalendarContent() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Legend */}
+          {/* Legend — deduplicated */}
           {stages.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-3">
-              {stages.map((s) => (
-                <div key={s.id} className="flex items-center gap-1.5">
-                  <div
-                    className="h-2.5 w-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: s.color }}
-                  />
-                  <span className="text-xs text-muted-foreground">{s.name}</span>
-                </div>
-              ))}
+              {stages
+                .filter((s, i, arr) => arr.findIndex((x) => x.name === s.name) === i)
+                .map((s) => (
+                  <div key={s.id} className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="text-xs text-muted-foreground">{s.name}</span>
+                  </div>
+                ))}
             </div>
           )}
         </div>
@@ -401,10 +389,7 @@ function CalendarContent() {
           <p className="text-xs text-muted-foreground max-w-xs">
             הוסף תאריכי יעד לעסקאות שלך והן יופיעו כאן כבלוקים צבעוניים.
           </p>
-          <Button
-            size="sm"
-            onClick={() => setSheetState({ open: true, date: format(new Date(), "yyyy-MM-dd") })}
-          >
+          <Button size="sm" onClick={() => setSheetState({ open: true, date: format(new Date(), "yyyy-MM-dd") })}>
             <Plus className="h-4 w-4 me-1" /> צור עסקה ראשונה
           </Button>
         </div>
@@ -412,9 +397,7 @@ function CalendarContent() {
 
       {/* FAB */}
       <button
-        onClick={() =>
-          setSheetState({ open: true, date: format(new Date(), "yyyy-MM-dd") })
-        }
+        onClick={() => setSheetState({ open: true, date: format(new Date(), "yyyy-MM-dd") })}
         className={cn(
           "fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-8",
           isRTL ? "left-4 md:left-6" : "right-4 md:right-6"

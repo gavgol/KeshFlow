@@ -5,7 +5,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2, Code2, Settings2 } from "lucide-react";
 import { useState, useRef } from "react";
@@ -120,13 +120,9 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-4">
-          {/* Profile */}
+          {/* Profile — clean, no redundant titles */}
           <Card className="border-border shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">פרופיל</CardTitle>
-              <CardDescription>השם שלך ופרטי העסק.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="pt-5 space-y-4">
               <div className="space-y-1.5">
                 <Label>השם שלך</Label>
                 <Input placeholder="ישראל ישראלי" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
@@ -141,15 +137,12 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Business Logo */}
+          {/* Business Logo — compact */}
           <Card className="border-border shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+            <CardContent className="pt-5 space-y-3">
+              <Label className="flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-primary" /> לוגו העסק
-              </CardTitle>
-              <CardDescription>הלוגו יוצג בדף ההזמנה הציבורי שלך.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+              </Label>
               {logoUrl ? (
                 <div className="flex items-center gap-4">
                   <img src={logoUrl} alt="לוגו העסק" className="h-16 w-16 rounded-xl object-cover border border-border" />
@@ -171,15 +164,12 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Public Booking Link */}
+          {/* Public Booking Link — compact */}
           <Card className="border-border shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-primary" /> קישור ההזמנה הציבורי שלך
-              </CardTitle>
-              <CardDescription>שתפו את הקישור עם לקוחות כדי שיוכלו לשלוח פנייה.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="pt-5 space-y-3">
+              <Label className="flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-primary" /> קישור הזמנה ציבורי
+              </Label>
               {bookingUrl ? (
                 <>
                   <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2.5">
@@ -193,32 +183,29 @@ export default function SettingsPage() {
                   </a>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">הגדר שם עסק למעלה כדי ליצור את קישור ההזמנה שלך.</p>
+                <p className="text-sm text-muted-foreground">הגדר שם עסק למעלה כדי ליצור קישור.</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Website Embed */}
+          {/* Website Embed — compact */}
           <Card className="border-border shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Code2 className="h-4 w-4 text-primary" /> שילוב באתר הקיים
-              </CardTitle>
-              <CardDescription>הטמע את טופס ההזמנה שלך באתר WordPress, Wix או כל אתר אחר.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="pt-5 space-y-3">
+              <Label className="flex items-center gap-2">
+                <Code2 className="h-4 w-4 text-primary" /> קוד הטמעה לאתר
+              </Label>
               {embedCode ? (
                 <>
                   <div className="relative rounded-xl border border-border bg-muted/50 p-3">
                     <pre className="text-xs font-mono text-foreground/80 whitespace-pre-wrap break-all leading-relaxed">{embedCode}</pre>
                     <button onClick={copyEmbed} className="absolute top-2 end-2 flex h-8 items-center gap-1.5 rounded-lg bg-background border border-border px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm">
-                      {embedCopied ? <><Check className="h-3 w-3 text-success" /> הועתק!</> : <><Copy className="h-3 w-3" /> העתק קוד</>}
+                      {embedCopied ? <><Check className="h-3 w-3 text-success" /> הועתק!</> : <><Copy className="h-3 w-3" /> העתק</>}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">הדבק את הקוד בעורך ה-HTML של האתר שלך כדי להציג את טופס ההזמנה.</p>
+                  <p className="text-xs text-muted-foreground">הדבק את הקוד בעורך ה-HTML של האתר שלך.</p>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">הגדר שם עסק למעלה כדי ליצור את קוד ההטמעה.</p>
+                <p className="text-sm text-muted-foreground">הגדר שם עסק למעלה כדי ליצור קוד הטמעה.</p>
               )}
             </CardContent>
           </Card>
