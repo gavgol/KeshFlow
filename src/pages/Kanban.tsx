@@ -458,7 +458,11 @@ function KanbanContent() {
     const myStages = (stagesRes.data ?? []).filter(
       (s: any) => s.pipelines?.user_id === user.id
     );
-    setStages(myStages);
+    // Deduplicate stages by ID
+    const uniqueStages = myStages.filter(
+      (s: Stage, i: number, arr: Stage[]) => arr.findIndex((x: Stage) => x.id === s.id) === i
+    );
+    setStages(uniqueStages);
 
     const enrichedDeals: Deal[] = (dealsRes.data ?? []).map((d: any) => ({
       ...d,
