@@ -48,7 +48,6 @@ import {
   Plus,
   CalendarDays,
   Loader2,
-  GripVertical,
   AlertCircle,
   MessageCircle,
   Star,
@@ -167,19 +166,11 @@ function SortableDealCard({ deal, onClick, isLastColumn }: { deal: Deal; onClick
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("relative", isDragging && "z-10")}
+      className={cn("relative touch-none cursor-grab active:cursor-grabbing", isDragging && "z-10")}
+      {...attributes}
+      {...listeners}
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute start-1 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10 touch-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GripVertical className="h-4 w-4 text-muted-foreground/40 hover:text-muted-foreground transition-colors" />
-      </div>
-      <div className="ps-5">
-        <DealCard deal={deal} onClick={onClick} isDragging={isDragging} isLastColumn={isLastColumn} />
-      </div>
+      <DealCard deal={deal} onClick={onClick} isDragging={isDragging} isLastColumn={isLastColumn} />
     </div>
   );
 }
@@ -623,7 +614,7 @@ function KanbanContent() {
 
         <DragOverlay dropAnimation={{ duration: 150, easing: "ease" }}>
           {activeDeal && (
-            <div className="w-[17rem] ps-5">
+          <div className="w-[17rem]">
               <DealCard deal={activeDeal} isDragging />
             </div>
           )}
