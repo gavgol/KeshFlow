@@ -281,11 +281,14 @@ function CalendarContent() {
           <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
             <PrevIcon className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-2 text-xs">
-            היום
-          </Button>
+          <span className="text-sm font-semibold min-w-[5rem] text-center">
+            {MONTH_NAMES_HE[currentMonth.getMonth()]} {currentYear}
+          </span>
           <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
             <NextIcon className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-3 text-xs ms-2">
+            היום
           </Button>
         </div>
       </div>

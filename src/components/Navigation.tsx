@@ -9,8 +9,10 @@ import {
   Moon,
   Sun,
   Search,
+  LogOut,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/AuthContext";
 import { openCommandPalette } from "@/components/CommandPalette";
 
 const navItems = [
@@ -62,6 +64,7 @@ export function DesktopSidebar({
 }) {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const { signOut } = useAuth();
   const isDark = theme === "dark";
 
   return (
@@ -88,7 +91,7 @@ export function DesktopSidebar({
         </button>
       </div>
 
-      {/* Search trigger — clicking opens the command palette */}
+      {/* Search trigger */}
       <div className="px-2 mb-1">
         <button
           onClick={openCommandPalette}
@@ -123,8 +126,8 @@ export function DesktopSidebar({
         })}
       </nav>
 
-      {/* Dark mode toggle at bottom */}
-      <div className="border-t border-border p-2">
+      {/* Bottom actions */}
+      <div className="border-t border-border p-2 space-y-1">
         <button
           onClick={() => setTheme(isDark ? "light" : "dark")}
           className={cn(
@@ -133,6 +136,15 @@ export function DesktopSidebar({
         >
           {isDark ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
           {!collapsed && <span>{isDark ? "מצב בהיר" : "מצב כהה"}</span>}
+        </button>
+        <button
+          onClick={() => signOut()}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
+          )}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>התנתק</span>}
         </button>
       </div>
     </aside>
