@@ -15,8 +15,8 @@ import {
   Contact,
   TrendingUp,
 } from "lucide-react";
-import { format, parseISO, subDays } from "date-fns";
-import { useState, useMemo } from "react";
+import { format, parseISO } from "date-fns";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,17 +74,8 @@ function StatCard({
 }
 
 /* ─── Revenue Chart ────────────────────────────────── */
-function RevenueChart() {
-  const mockData = useMemo(() => {
-    const today = new Date();
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = subDays(today, 6 - i);
-      return {
-        day: format(date, "EEE"),
-        revenue: Math.floor(Math.random() * 4000 + 1000),
-      };
-    });
-  }, []);
+function RevenueChart({ data }: { data: { day: string; revenue: number }[] }) {
+  const hasData = data.some((d) => d.revenue > 0);
 
   return (
     <Card className="border-border shadow-sm bg-card col-span-full">
@@ -98,50 +89,57 @@ function RevenueChart() {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-[200px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={mockData} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `₪${v}`}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "0.75rem",
-                  fontSize: 12,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                }}
-                formatter={(value: number) => [`₪${value.toLocaleString()}`, "הכנסות"]}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2.5}
-                fill="url(#revenueGradient)"
-                dot={false}
-                activeDot={{ r: 5, strokeWidth: 2, fill: "hsl(var(--primary))" }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        {!hasData ? (
+          <div className="flex flex-col items-center justify-center h-[200px] text-center">
+            <TrendingUp className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm font-medium text-muted-foreground">אין נתונים להציג לשבוע זה</p>
+          </div>
+        ) : (
+          <div className="h-[200px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `₪${v}`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "0.75rem",
+                    fontSize: 12,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  }}
+                  formatter={(value: number) => [`₪${value.toLocaleString()}`, "הכנסות"]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2.5}
+                  fill="url(#revenueGradient)"
+                  dot={false}
+                  activeDot={{ r: 5, strokeWidth: 2, fill: "hsl(var(--primary))" }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -193,7 +191,7 @@ function FabMenu({
 function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { stats, dueContacts, upcomingDeals, loading, refetch } =
+  const { stats, dueContacts, upcomingDeals, revenueByDay, loading, refetch } =
     useDashboardData();
   const [fabOpen, setFabOpen] = useState(false);
   const isRTL = profile?.locale === "he" || profile?.locale === "ar";
@@ -266,7 +264,7 @@ function Dashboard() {
       </div>
 
       {/* Revenue Chart */}
-      <RevenueChart />
+      <RevenueChart data={revenueByDay} />
 
       {/* Who to contact today */}
       <Card className="border-border shadow-sm bg-card">

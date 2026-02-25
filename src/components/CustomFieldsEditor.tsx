@@ -96,7 +96,7 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
       <CardContent className="space-y-4">
         {fields.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">
-            אין שדות מותאמים עדיין. לחץ "הוסף שדה" כדי להתחיל.
+            לחץ "הוסף שדה" כדי להתחיל.
           </p>
         )}
 
