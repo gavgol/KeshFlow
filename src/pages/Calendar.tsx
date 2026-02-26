@@ -235,24 +235,26 @@ function CalendarContent() {
   const weekDays = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
   const currentYear = currentMonth.getFullYear();
-  const yearOptions = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
+  const yearOptions = Array.from({ length: 31 }, (_, i) => 2010 + i);
 
   return (
     <div className="relative flex flex-col min-h-full">
       {/* Header */}
       <div className="px-4 pt-5 pb-3 md:px-6 md:pt-6 flex items-center justify-between border-b border-border/60 bg-background">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">יומן</h1>
-          {/* Month & Year selectors */}
-          <div className="flex items-center gap-2 mt-1">
+        <h1 className="text-xl font-bold tracking-tight">יומן</h1>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1" dir="ltr">
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
             <Select
               value={String(currentMonth.getMonth())}
               onValueChange={(v) => setCurrentMonth((m) => setMonth(m, parseInt(v)))}
             >
-              <SelectTrigger className="h-7 w-auto gap-1 border-none bg-transparent px-1 text-sm font-medium shadow-none focus:ring-0">
+              <SelectTrigger dir="rtl" className="h-8 w-auto gap-1 border-none bg-transparent px-2 text-sm font-semibold shadow-none focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 {MONTH_NAMES_HE.map((name, i) => (
                   <SelectItem key={i} value={String(i)}>{name}</SelectItem>
                 ))}
@@ -262,32 +264,22 @@ function CalendarContent() {
               value={String(currentYear)}
               onValueChange={(v) => setCurrentMonth((m) => setYear(m, parseInt(v)))}
             >
-              <SelectTrigger className="h-7 w-auto gap-1 border-none bg-transparent px-1 text-sm font-medium shadow-none focus:ring-0">
+              <SelectTrigger dir="rtl" className="h-8 w-auto gap-1 border-none bg-transparent px-2 text-sm font-semibold shadow-none focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 {yearOptions.map((y) => (
                   <SelectItem key={y} value={String(y)}>{y}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-3 text-xs">
-            היום
-          </Button>
-          <div className="flex items-center gap-1" dir="ltr">
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-semibold min-w-[5rem] text-center">
-              {MONTH_NAMES_HE[currentMonth.getMonth()]} {currentYear}
-            </span>
             <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-3 text-xs">
+            היום
+          </Button>
         </div>
       </div>
 

@@ -175,17 +175,19 @@ function FabMenu({
       >
         <button
           onClick={onNewContact}
-          className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
+          className="flex flex-row-reverse items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
+          dir="rtl"
         >
-          <Contact className="h-4 w-4 text-primary" />
           איש קשר חדש
+          <Contact className="h-4 w-4 text-primary" />
         </button>
         <button
           onClick={onNewDeal}
-          className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
+          className="flex flex-row-reverse items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
+          dir="rtl"
         >
-          <Briefcase className="h-4 w-4 text-primary" />
           עסקה חדשה
+          <Briefcase className="h-4 w-4 text-primary" />
         </button>
       </div>
     </>
