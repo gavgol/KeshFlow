@@ -1,6 +1,7 @@
 
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useProfile } from "@/hooks/useProfile";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -149,10 +150,14 @@ function RevenueChart({ data }: { data: { day: string; revenue: number }[] }) {
 function FabMenu({
   open,
   onClose,
+  onNewContact,
+  onNewDeal,
   isRTL,
 }: {
   open: boolean;
   onClose: () => void;
+  onNewContact: () => void;
+  onNewDeal: () => void;
   isRTL: boolean;
 }) {
   if (!open) return null;
@@ -169,14 +174,14 @@ function FabMenu({
         )}
       >
         <button
-          onClick={onClose}
+          onClick={onNewContact}
           className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
         >
           <Contact className="h-4 w-4 text-primary" />
           איש קשר חדש
         </button>
         <button
-          onClick={onClose}
+          onClick={onNewDeal}
           className="flex items-center gap-3 rounded-full bg-background px-4 py-2.5 text-sm font-medium shadow-lg border border-border hover:bg-muted transition-colors"
         >
           <Briefcase className="h-4 w-4 text-primary" />
@@ -191,6 +196,7 @@ function FabMenu({
 function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const navigate = useNavigate();
   const { stats, dueContacts, upcomingDeals, revenueByDay, loading, refetch } =
     useDashboardData();
   const [fabOpen, setFabOpen] = useState(false);
@@ -223,6 +229,16 @@ function Dashboard() {
       .eq("id", contactId);
     toast.success("נדחה לשבוע!");
     refetch();
+  };
+
+  const openNewContactFromFab = () => {
+    setFabOpen(false);
+    navigate("/contacts?new=1");
+  };
+
+  const openNewDealFromFab = () => {
+    setFabOpen(false);
+    navigate("/kanban?new=1");
   };
 
   return (
@@ -422,6 +438,8 @@ function Dashboard() {
       <FabMenu
         open={fabOpen}
         onClose={() => setFabOpen(false)}
+        onNewContact={openNewContactFromFab}
+        onNewDeal={openNewDealFromFab}
         isRTL={isRTL}
       />
     </div>

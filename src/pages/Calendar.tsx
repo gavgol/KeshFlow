@@ -237,10 +237,6 @@ function CalendarContent() {
   const currentYear = currentMonth.getFullYear();
   const yearOptions = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
 
-  // In RTL: "next" arrow should visually point left, "prev" should point right
-  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
-  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
-
   return (
     <div className="relative flex flex-col min-h-full">
       {/* Header */}
@@ -277,19 +273,21 @@ function CalendarContent() {
             </Select>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
-            <PrevIcon className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-semibold min-w-[5rem] text-center">
-            {MONTH_NAMES_HE[currentMonth.getMonth()]} {currentYear}
-          </span>
-          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
-            <NextIcon className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-3 text-xs ms-2">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-3 text-xs">
             היום
           </Button>
+          <div className="flex items-center gap-1" dir="ltr">
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-semibold min-w-[5rem] text-center">
+              {MONTH_NAMES_HE[currentMonth.getMonth()]} {currentYear}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
