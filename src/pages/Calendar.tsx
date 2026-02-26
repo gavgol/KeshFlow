@@ -133,8 +133,8 @@ function NewDealSheet({
           <div className="space-y-1.5">
             <Label>שלב</Label>
             <Select value={stageId} onValueChange={setStageId}>
-              <SelectTrigger><SelectValue placeholder="בחר שלב" /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger dir="rtl"><SelectValue placeholder="בחר שלב" /></SelectTrigger>
+              <SelectContent dir="rtl">
                 {stages.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
               </SelectContent>
             </Select>
@@ -142,8 +142,8 @@ function NewDealSheet({
           <div className="space-y-1.5">
             <Label>איש קשר</Label>
             <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger><SelectValue placeholder="ללא איש קשר" /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger dir="rtl"><SelectValue placeholder="ללא איש קשר" /></SelectTrigger>
+              <SelectContent dir="rtl">
                 <SelectItem value={NO_CONTACT}>ללא איש קשר</SelectItem>
                 {contacts.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
               </SelectContent>
