@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -418,6 +419,7 @@ function KanbanContent() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const isRTL = profile?.locale === "he" || profile?.locale === "ar";
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [stages, setStages] = useState<Stage[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -458,9 +460,9 @@ function KanbanContent() {
     const myStages = (stagesRes.data ?? []).filter(
       (s: any) => s.pipelines?.user_id === user.id
     );
-    // Deduplicate stages by ID
+    // Deduplicate stages by name (first instance only)
     const uniqueStages = myStages.filter(
-      (s: Stage, i: number, arr: Stage[]) => arr.findIndex((x: Stage) => x.id === s.id) === i
+      (s: Stage, i: number, arr: Stage[]) => arr.findIndex((x: Stage) => x.name === s.name) === i
     );
     setStages(uniqueStages);
 
@@ -477,6 +479,14 @@ function KanbanContent() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1" || stages.length === 0) return;
+    setNewDealSheet({ open: true, stageId: stages[0]?.id ?? null });
+    const params = new URLSearchParams(searchParams);
+    params.delete("new");
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams, stages]);
 
   // Realtime subscription — new deals appear instantly
   useEffect(() => {

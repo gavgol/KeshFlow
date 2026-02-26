@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -254,6 +255,7 @@ function ContactsContent() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const isRTL = profile?.locale === "he" || profile?.locale === "ar";
+  const [searchParams, setSearchParams] = useSearchParams();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -285,6 +287,14 @@ function ContactsContent() {
 
   const openNew = () => { setEditContact(null); setSheetOpen(true); };
   const openEdit = (c: Contact) => { setEditContact(c); setSheetOpen(true); };
+
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    openNew();
+    const params = new URLSearchParams(searchParams);
+    params.delete("new");
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   return (
     <div className="relative min-h-full p-4 md:p-6 space-y-4">

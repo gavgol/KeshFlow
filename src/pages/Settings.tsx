@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2, Code2, Settings2 } from "lucide-react";
+import { Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2, Code2, Settings2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import CustomFieldsEditor, { type CustomField } from "@/components/CustomFieldsEditor";
 
 export default function SettingsPage() {
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const { profile, refetch } = useProfile();
   const [copied, setCopied] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
@@ -210,9 +210,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Button variant="outline" onClick={signOut} className="gap-2">
-            <LogOut className="h-4 w-4" /> התנתק
-          </Button>
         </TabsContent>
 
         <TabsContent value="custom-fields" className="mt-4">
