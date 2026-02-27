@@ -68,9 +68,10 @@ export function useDashboardData() {
     const activeDeals = deals.length;
 
     const completedStageIds = stages
-      .filter((s) =>
-        ["completed", "paid", "closed won"].includes(s.name.toLowerCase())
-      )
+      .filter((s) => {
+        const name = s.name.toLowerCase();
+        return ["completed", "paid", "closed won", "הושלם"].includes(name);
+      })
       .map((s) => s.id);
 
     const completedDeals = deals.filter(

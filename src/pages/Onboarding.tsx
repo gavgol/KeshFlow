@@ -145,7 +145,7 @@ export default function Onboarding() {
       await refetchProfile();
 
       toast.success("הכל מוכן! ברוכים הבאים.");
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       toast.error(err.message || "משהו השתבש.");
     } finally {
