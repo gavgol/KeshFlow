@@ -23,7 +23,7 @@ export default function Auth() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else navigate("/");
+      else navigate("/dashboard");
     } else {
       const { error } = await supabase.auth.signUp({
         email,
@@ -33,7 +33,7 @@ export default function Auth() {
       if (error) toast.error(error.message);
       else {
         toast.success("Account created! Signing you in...");
-        navigate("/");
+        navigate("/dashboard");
       }
     }
     setLoading(false);
@@ -66,10 +66,10 @@ export default function Auth() {
           <h1 className="text-5xl font-extrabold tracking-tight text-primary-foreground leading-tight">
             ברוכים הבאים ל-
             <br />
-            Chameleon CRM
+            KeshFlow
           </h1>
           <p className="text-lg text-primary-foreground/80 leading-relaxed">
-            המערכת שמתאימה את עצמה לעסק שלך.
+            נהל את קשרי הלקוחות והזרם את העסק קדימה.
             <br />
             ניהול לקוחות, לידים ויומן — הכל במקום אחד.
           </p>
@@ -87,9 +87,9 @@ export default function Auth() {
           {/* Mobile-only branding */}
           <div className="text-center lg:hidden space-y-2">
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-              Chameleon CRM
+              KeshFlow
             </h1>
-            <p className="text-sm text-muted-foreground">המערכת שמתאימה את עצמה לעסק שלך</p>
+            <p className="text-sm text-muted-foreground">נהל את קשרי הלקוחות והזרם את העסק קדימה</p>
           </div>
 
           <div className="space-y-2">

@@ -10,7 +10,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
-import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
+import DashboardPage from "./pages/Dashboard";
 import CalendarPage from "./pages/Calendar";
 import KanbanPage from "./pages/Kanban";
 import ContactsPage from "./pages/Contacts";
@@ -22,7 +23,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <DirectionProvider dir="rtl">
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="chameleon-theme">
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="keshflow-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -30,12 +31,15 @@ const App = () => (
           <BrowserRouter>
             <AuthProvider>
               <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                 <Route path="/book/:business_slug" element={<BookingPage />} />
 
+                {/* Protected routes */}
+                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                 <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/kanban" element={<KanbanPage />} />
                   <Route path="/contacts" element={<ContactsPage />} />

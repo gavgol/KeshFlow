@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { openCommandPalette } from "@/components/CommandPalette";
 
 const navItems = [
-  { to: "/", label: "לוח בקרה", icon: LayoutDashboard },
+  { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
   { to: "/calendar", label: "יומן", icon: CalendarDays },
   { to: "/kanban", label: "לידים", icon: Columns3 },
   { to: "/contacts", label: "אנשי קשר", icon: Users },
@@ -31,8 +31,8 @@ export function BottomTabBar() {
       <div className="flex h-16 items-center justify-around px-2">
         {navItems.map((item) => {
           const isActive =
-            item.to === "/"
-              ? location.pathname === "/"
+            item.to === "/dashboard"
+              ? location.pathname === "/dashboard"
               : location.pathname.startsWith(item.to);
           return (
             <RouterNavLink
@@ -77,7 +77,7 @@ export function DesktopSidebar({
       <div className="flex h-14 items-center border-b border-border px-4">
         {!collapsed && (
           <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
-            Chameleon
+            KeshFlow
           </span>
         )}
         <button
@@ -105,8 +105,8 @@ export function DesktopSidebar({
       <nav className="flex-1 space-y-1 p-2">
         {navItems.map((item) => {
           const isActive =
-            item.to === "/"
-              ? location.pathname === "/"
+            item.to === "/dashboard"
+              ? location.pathname === "/dashboard"
               : location.pathname.startsWith(item.to);
           return (
             <RouterNavLink

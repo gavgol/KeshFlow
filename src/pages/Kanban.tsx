@@ -635,15 +635,12 @@ function KanbanContent() {
         </DragOverlay>
       </DndContext>
 
-      {/* FAB */}
+      {/* FAB — sticky within content */}
       <button
         onClick={() =>
           setNewDealSheet({ open: true, stageId: stages[0]?.id ?? null })
         }
-        className={cn(
-          "fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-8",
-          isRTL ? "left-4 md:left-6" : "right-4 md:right-6"
-        )}
+        className="sticky bottom-4 start-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 ms-4 mb-4"
         aria-label="Add deal"
       >
         <Plus className="h-6 w-6" />

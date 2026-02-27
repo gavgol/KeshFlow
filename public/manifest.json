@@ -1,8 +1,8 @@
 {
-  "name": "Chameleon CRM",
-  "short_name": "Chameleon",
+  "name": "KeshFlow CRM",
+  "short_name": "KeshFlow",
   "description": "מערכת CRM חכמה לעסקים קטנים",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6366f1",

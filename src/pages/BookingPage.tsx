@@ -250,7 +250,7 @@ export default function BookingPage() {
                   </Button>
                 </form>
 
-                <p className="text-center text-[11px] text-muted-foreground/70">מופעל על ידי Chameleon CRM</p>
+                <p className="text-center text-[11px] text-muted-foreground/70">מופעל על ידי KeshFlow</p>
               </div>
             </motion.div>
           ) : (
