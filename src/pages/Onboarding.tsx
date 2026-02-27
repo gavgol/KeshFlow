@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,13 +19,12 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { persistDir } from "@/components/AppLayout";
 
 const BUSINESS_TYPES = [
   {
     id: "service" as const,
-    title: "Service / Appointments",
-    description: "Barber, Salon, Trainer, Therapist",
+    title: "שירות / תורים",
+    description: "מספרה, סלון, מאמן, מטפל",
     icon: CalendarDays,
     defaultView: "calendar",
     stages: [
@@ -36,8 +36,8 @@ const BUSINESS_TYPES = [
   },
   {
     id: "project" as const,
-    title: "Project / Pipeline",
-    description: "Web Dev, Freelancer, Consultant",
+    title: "פרויקט / צינור",
+    description: "פיתוח אתרים, פרילנסר, יועץ",
     icon: Columns3,
     defaultView: "kanban",
     stages: [
@@ -50,8 +50,8 @@ const BUSINESS_TYPES = [
   },
   {
     id: "sales" as const,
-    title: "Sales / Leads",
-    description: "Real Estate, Insurance, Retail",
+    title: "מכירות / לידים",
+    description: "נדל״ן, ביטוח, קמעונאות",
     icon: Target,
     defaultView: "dashboard",
     stages: [
@@ -65,8 +65,8 @@ const BUSINESS_TYPES = [
   },
   {
     id: "other" as const,
-    title: "Other / Custom",
-    description: "Define your own workflow",
+    title: "אחר / מותאם אישית",
+    description: "הגדר את תהליך העבודה שלך",
     icon: HelpCircle,
     defaultView: "kanban",
     stages: [
@@ -79,29 +79,18 @@ const BUSINESS_TYPES = [
   },
 ];
 
-const LOCALES = [
-  { id: "en", label: "English", dir: "LTR", flag: "🇺🇸" },
-  { id: "he", label: "עברית (Hebrew)", dir: "RTL", flag: "🇮🇱" },
-  { id: "ar", label: "العربية (Arabic)", dir: "RTL", flag: "🇸🇦" },
-];
-
 export default function Onboarding() {
   const { user } = useAuth();
+  const { refetch: refetchProfile } = useProfile();
   const navigate = useNavigate();
+  // Only 2 steps now: business type + profile info
   const [step, setStep] = useState(1);
   const [businessType, setBusinessType] = useState<string | null>(null);
   const [customWorkflow, setCustomWorkflow] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [locale, setLocaleState] = useState("en");
   const [saving, setSaving] = useState(false);
 
-  const setLocale = (l: string) => {
-    setLocaleState(l);
-    persistDir(l === "he" || l === "ar" ? "rtl" : "ltr");
-  };
-
-  const isRTL = locale === "he" || locale === "ar";
   const selectedType = BUSINESS_TYPES.find((t) => t.id === businessType);
 
   const handleComplete = async () => {
@@ -121,7 +110,7 @@ export default function Onboarding() {
           business_type: finalBusinessType,
           business_name: businessName || null,
           display_name: displayName || null,
-          locale,
+          locale: "he",
           default_view: selectedType.defaultView,
           onboarding_completed: true,
         })
@@ -152,20 +141,23 @@ export default function Onboarding() {
 
       if (stagesError) throw stagesError;
 
-      toast.success("You're all set! Welcome to Chameleon.");
-      navigate("/");
+      // 4. Invalidate profile cache so ProtectedRoute sees onboarding_completed = true
+      await refetchProfile();
+
+      toast.success("הכל מוכן! ברוכים הבאים.");
+      navigate("/", { replace: true });
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong.");
+      toast.error(err.message || "משהו השתבש.");
     } finally {
       setSaving(false);
     }
   };
 
-  const totalSteps = 3;
+  const totalSteps = 2;
 
   return (
     <div
-      dir={isRTL ? "rtl" : "ltr"}
+      dir="rtl"
       className="flex min-h-screen items-center justify-center bg-background px-4 py-12 transition-all"
     >
       <div className="w-full max-w-lg space-y-6">
@@ -182,61 +174,15 @@ export default function Onboarding() {
           ))}
         </div>
 
-        {/* Step 1: Language & Direction */}
+        {/* Step 1: Business Type */}
         {step === 1 && (
           <div className="space-y-4">
             <div className="text-center">
               <h1 className="text-2xl font-bold tracking-tight">
-                Choose your language
+                מה מניע את העסק שלך?
               </h1>
               <p className="mt-1 text-muted-foreground">
-                This sets the text direction for the entire app.
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              {LOCALES.map((loc) => (
-                <button
-                  key={loc.id}
-                  onClick={() => setLocale(loc.id)}
-                  className={cn(
-                    "flex items-center justify-between rounded-xl border-2 px-4 py-3 text-start transition-all",
-                    locale === loc.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{loc.flag}</span>
-                    <div>
-                      <div className="font-medium">{loc.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {loc.dir}
-                      </div>
-                    </div>
-                  </div>
-                  {locale === loc.id && (
-                    <Check className="h-5 w-5 text-primary" />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <Button className="w-full" onClick={() => setStep(2)}>
-              Continue <ArrowRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
-            </Button>
-          </div>
-        )}
-
-        {/* Step 2: Business Type */}
-        {step === 2 && (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold tracking-tight">
-                What drives your business?
-              </h1>
-              <p className="mt-1 text-muted-foreground">
-                We'll customize your CRM experience based on this.
+                נתאים את חווית ה-CRM בהתאם.
               </p>
             </div>
 
@@ -267,11 +213,10 @@ export default function Onboarding() {
                     <div className="text-sm text-muted-foreground">
                       {type.description}
                     </div>
-                    {/* Custom workflow input for "Other" */}
                     {type.id === "other" && businessType === "other" && (
                       <div className="mt-3" onClick={(e) => e.stopPropagation()}>
                         <Input
-                          placeholder="e.g. Photography studio, Event planner..."
+                          placeholder="למשל: סטודיו לצילום, מפיק אירועים..."
                           value={customWorkflow}
                           onChange={(e) => setCustomWorkflow(e.target.value)}
                           className="text-sm"
@@ -281,54 +226,49 @@ export default function Onboarding() {
                     )}
                   </div>
                   {businessType === type.id && (
-                    <Check className="absolute end-4 top-4 h-5 w-5 text-primary" />
+                    <Check className="absolute start-4 top-4 h-5 w-5 text-primary" />
                   )}
                 </button>
               ))}
             </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                <ArrowLeft className={cn("h-4 w-4", isRTL && "rotate-180")} /> Back
-              </Button>
-              <Button
-                className="flex-1"
-                disabled={
-                  !businessType ||
-                  (businessType === "other" && !customWorkflow.trim())
-                }
-                onClick={() => setStep(3)}
-              >
-                Continue <ArrowRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
-              </Button>
-            </div>
+            <Button
+              className="w-full"
+              disabled={
+                !businessType ||
+                (businessType === "other" && !customWorkflow.trim())
+              }
+              onClick={() => setStep(2)}
+            >
+              המשך <ArrowLeft className="h-4 w-4" />
+            </Button>
           </div>
         )}
 
-        {/* Step 3: Profile Info */}
-        {step === 3 && (
+        {/* Step 2: Profile Info */}
+        {step === 2 && (
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Tell us about yourself</CardTitle>
+              <CardTitle>ספר לנו על עצמך</CardTitle>
               <CardDescription>
-                This helps personalize your workspace.
+                זה עוזר להתאים אישית את סביבת העבודה שלך.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Your Name</Label>
+                <Label htmlFor="displayName">השם שלך</Label>
                 <Input
                   id="displayName"
-                  placeholder="John Doe"
+                  placeholder="ישראל ישראלי"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="businessName">Business Name</Label>
+                <Label htmlFor="businessName">שם העסק</Label>
                 <Input
                   id="businessName"
-                  placeholder="John's Barbershop"
+                  placeholder="המספרה של ישראל"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                 />
@@ -336,10 +276,10 @@ export default function Onboarding() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(1)}
                   className="flex-1"
                 >
-                  <ArrowLeft className={cn("h-4 w-4", isRTL && "rotate-180")} /> Back
+                  <ArrowRight className="h-4 w-4" /> חזרה
                 </Button>
                 <Button
                   onClick={handleComplete}
@@ -350,7 +290,7 @@ export default function Onboarding() {
                     <Loader2 className="animate-spin" />
                   ) : (
                     <>
-                      Get Started <ArrowRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
+                      בואו נתחיל <ArrowLeft className="h-4 w-4" />
                     </>
                   )}
                 </Button>
