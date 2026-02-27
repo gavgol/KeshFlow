@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface Profile {
   id: string;
@@ -17,31 +17,24 @@ export interface Profile {
 
 export function useProfile() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchProfile = async () => {
-    if (!user) {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
+  const { data: profile, isLoading: loading } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (error) throw error;
+      return data as Profile;
+    },
+    enabled: !!user,
+  });
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+  const refetch = () => queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
 
-    if (!error && data) {
-      setProfile(data as Profile);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchProfile();
-  }, [user]);
-
-  return { profile, loading, refetch: fetchProfile };
+  return { profile: profile ?? null, loading: !user ? false : loading, refetch };
 }
