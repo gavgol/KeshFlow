@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const logoUrl = (profile as any)?.business_logo_url as string | null;
+  const logoUrl = profile?.business_logo_url ?? null;
 
   useEffect(() => {
     if (profile) {
@@ -108,7 +108,7 @@ export default function SettingsPage() {
     finally { setUploading(false); }
   };
 
-  const customFieldsSchema: CustomField[] = ((profile as any)?.custom_fields_schema as CustomField[]) ?? [];
+  const customFieldsSchema: CustomField[] = (profile?.custom_fields_schema as CustomField[]) ?? [];
 
   return (
     <div className="p-4 md:p-6 max-w-xl space-y-6">
