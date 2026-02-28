@@ -51,7 +51,9 @@ export default function BookingPage() {
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, business_name, business_logo_url, custom_fields_schema")
-        .not("business_name", "is", null);
+        .eq("onboarding_completed", true)
+        .not("business_name", "is", null)
+        .limit(50);
 
       const match = (profiles ?? []).find((p: any) => {
         const slug = (p.business_name ?? "")

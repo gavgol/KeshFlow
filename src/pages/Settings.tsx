@@ -79,9 +79,9 @@ export default function SettingsPage() {
     try {
       const ext = file.name.split(".").pop();
       const path = `${user.id}/logo.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("deal-photos").upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from("business-logos").upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("deal-photos").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("business-logos").getPublicUrl(path);
       const { error: updateError } = await supabase.from("profiles").update({ business_logo_url: urlData.publicUrl }).eq("user_id", user.id);
       if (updateError) throw updateError;
       toast.success("הלוגו הועלה בהצלחה!");
