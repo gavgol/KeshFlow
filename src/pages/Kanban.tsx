@@ -52,6 +52,8 @@ import {
   AlertCircle,
   MessageCircle,
   Star,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -68,11 +70,13 @@ function DealCard({
   onClick,
   isDragging = false,
   isLastColumn = false,
+  onStatusChange,
 }: {
   deal: Deal;
   onClick?: () => void;
   isDragging?: boolean;
   isLastColumn?: boolean;
+  onStatusChange?: (dealId: string, status: 'won' | 'lost') => void;
 }) {
   const isOverdue = deal.due_date ? isPast(parseISO(deal.due_date)) : false;
 
@@ -82,7 +86,7 @@ function DealCard({
       whileHover={!isDragging ? { y: -2, boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)" } : undefined}
       transition={{ duration: 0.15 }}
       className={cn(
-        "cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2.5 shadow-sm hover:shadow-md transition-shadow",
+        "group cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2.5 shadow-sm hover:shadow-md transition-shadow",
         isDragging && "opacity-60 rotate-1 scale-105 shadow-xl"
       )}
     >
@@ -153,13 +157,31 @@ function DealCard({
           <Star className="h-3 w-3" />
           בקש ביקורת ב-WhatsApp
         </a>
+       )}
+
+      {/* Won / Lost actions */}
+      {onStatusChange && (
+        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onStatusChange(deal.id, 'won')}
+            className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+          >
+            <CheckCircle className="h-3.5 w-3.5" /> סגור
+          </button>
+          <button
+            onClick={() => onStatusChange(deal.id, 'lost')}
+            className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+          >
+            <XCircle className="h-3.5 w-3.5" /> אבד
+          </button>
+        </div>
       )}
     </motion.div>
   );
 }
 
 /* ─── Sortable wrapper ────────────────────────────────────────────── */
-function SortableDealCard({ deal, onClick, isLastColumn }: { deal: Deal; onClick?: () => void; isLastColumn?: boolean }) {
+function SortableDealCard({ deal, onClick, isLastColumn, onStatusChange }: { deal: Deal; onClick?: () => void; isLastColumn?: boolean; onStatusChange?: (dealId: string, status: 'won' | 'lost') => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: deal.id, data: { type: "deal", stageId: deal.stage_id } });
 
@@ -171,7 +193,7 @@ function SortableDealCard({ deal, onClick, isLastColumn }: { deal: Deal; onClick
       {...attributes}
       {...listeners}
     >
-      <DealCard deal={deal} onClick={onClick} isDragging={isDragging} isLastColumn={isLastColumn} />
+      <DealCard deal={deal} onClick={onClick} isDragging={isDragging} isLastColumn={isLastColumn} onStatusChange={onStatusChange} />
     </div>
   );
 }
@@ -199,12 +221,14 @@ function KanbanColumn({
   onAddDeal,
   onDealClick,
   isLastColumn,
+  onStatusChange,
 }: {
   stage: Stage;
   deals: Deal[];
   onAddDeal: (stageId: string) => void;
   onDealClick: (deal: Deal) => void;
   isLastColumn: boolean;
+  onStatusChange: (dealId: string, status: 'won' | 'lost') => void;
 }) {
   return (
     <div className="flex flex-col w-[17rem] shrink-0 rounded-2xl bg-muted/40 border border-border/50">
@@ -239,6 +263,7 @@ function KanbanColumn({
               deal={deal}
               onClick={() => onDealClick(deal)}
               isLastColumn={isLastColumn}
+              onStatusChange={onStatusChange}
             />
           ))}
           {deals.length === 0 && (
@@ -509,7 +534,21 @@ function KanbanContent() {
   }, [user, fetchData]);
 
   const dealsByStage = (stageId: string) =>
-    deals.filter((d) => d.stage_id === stageId);
+    deals.filter((d) => d.stage_id === stageId && (d as any).status !== 'won' && (d as any).status !== 'lost');
+
+  const handleStatusChange = async (dealId: string, status: 'won' | 'lost') => {
+    const { error } = await supabase.from("deals").update({ status } as any).eq("id", dealId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (status === 'won') {
+      toast.success("העסקה נסגרה בהצלחה! 🎉");
+    } else {
+      toast.error("העסקה סומנה כאבודה");
+    }
+    fetchData();
+  };
 
   const lastStageId = stages.length > 0 ? stages[stages.length - 1].id : null;
 
@@ -621,6 +660,7 @@ function KanbanContent() {
                   /* TODO: open deal detail sheet */
                 }}
                 isLastColumn={stage.id === lastStageId}
+                onStatusChange={handleStatusChange}
               />
             </div>
           ))}

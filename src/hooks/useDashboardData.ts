@@ -55,7 +55,7 @@ export function useDashboardData() {
         .eq("user_id", user.id),
       supabase
         .from("deals")
-        .select("id, title, due_date, value, contact_id, stage_id, user_id, updated_at")
+        .select("id, title, due_date, value, contact_id, stage_id, user_id, updated_at, status")
         .eq("user_id", user.id),
       supabase
         .from("pipeline_stages")
@@ -68,37 +68,26 @@ export function useDashboardData() {
 
     const totalContacts = contacts.length;
 
-    const completedNames = ["completed", "paid", "closed won", "הושלם", "שולם"];
-    const lostNames = ["lost", "cancelled", "אבוד", "בוטל"];
-
-    const completedStageIds = stages
-      .filter((s) => completedNames.includes(s.name.toLowerCase()))
-      .map((s) => s.id);
-
-    const lostStageIds = stages
-      .filter((s) => lostNames.includes(s.name.toLowerCase()))
-      .map((s) => s.id);
-
-    const closedStageIds = [...completedStageIds, ...lostStageIds];
-
-    const activeDeals = deals.filter(
-      (d) => !d.stage_id || !closedStageIds.includes(d.stage_id)
-    ).length;
+    // Use the status column directly
+    const activeDeals = deals.filter((d: any) => d.status === 'active').length;
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const wonThisMonth = deals.filter(
-      (d) => d.stage_id && completedStageIds.includes(d.stage_id) && d.updated_at >= startOfMonth
+    const wonThisMonth = deals.filter((d: any) =>
+      d.status === 'won' && d.updated_at >= startOfMonth
     );
     const revenueThisMonth = wonThisMonth.reduce((sum, d) => sum + (d.value ?? 0), 0);
 
-    const completedDeals = deals.filter((d) => d.stage_id && completedStageIds.includes(d.stage_id));
-    const lostDeals = deals.filter((d) => d.stage_id && lostStageIds.includes(d.stage_id));
-    const totalClosed = completedDeals.length + lostDeals.length;
-    const conversionRate = totalClosed > 0 ? Math.round((completedDeals.length / totalClosed) * 100) : 0;
+    const wonDeals = deals.filter((d: any) => d.status === 'won');
+    const lostDeals = deals.filter((d: any) => d.status === 'lost');
+    const totalClosed = wonDeals.length + lostDeals.length;
+    const conversionRate = totalClosed > 0 ? Math.round((wonDeals.length / totalClosed) * 100) : 0;
 
     setStats({ totalContacts, activeDeals, revenueThisMonth, conversionRate });
+
+    // --- Revenue by day (last 7 days from won deals) ---
+    const completedDeals = wonDeals;
 
     // --- Revenue by day (last 7 days from real completed deals) ---
     const today = new Date();
