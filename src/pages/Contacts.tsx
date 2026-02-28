@@ -48,7 +48,7 @@ function getFollowUpStatus(contact: Contact): "overdue" | "soon" | "ok" | "none"
   return "ok";
 }
 
-function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact) => void }) {
+function ContactRow({ contact, onEdit, winRate }: { contact: Contact; onEdit: (c: Contact) => void; winRate?: { won: number; total: number } }) {
   const status = getFollowUpStatus(contact);
   const phone = contact.phone?.replace(/\D/g, "") ?? "";
 
@@ -63,6 +63,19 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="truncate font-semibold text-sm">{contact.name}</span>
+          {winRate && winRate.total > 0 && (
+            <Badge
+              variant="outline"
+              className={cn(
+                "shrink-0 text-[10px] px-1.5 py-0 gap-0.5",
+                winRate.won / winRate.total > 0.5
+                  ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/30"
+                  : "text-muted-foreground bg-muted border-border"
+              )}
+            >
+              {winRate.won}/{winRate.total} ✓
+            </Badge>
+          )}
           {status === "overdue" && (
             <Badge variant="destructive" className="shrink-0 text-[10px] px-1.5 py-0">
               פג תוקף
@@ -257,6 +270,7 @@ function ContactsContent() {
   const isRTL = profile?.locale === "he" || profile?.locale === "ar";
   const [searchParams, setSearchParams] = useSearchParams();
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [dealCountsMap, setDealCountsMap] = useState<Map<string, { won: number; total: number }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -265,12 +279,30 @@ function ContactsContent() {
   const fetchContacts = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("contacts")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("name");
-    setContacts(data ?? []);
+    const [contactsRes, dealCountsRes] = await Promise.all([
+      supabase
+        .from("contacts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("name"),
+      supabase
+        .from("deals")
+        .select("contact_id, status")
+        .eq("user_id", user.id)
+        .not("contact_id", "is", null),
+    ]);
+    setContacts(contactsRes.data ?? []);
+
+    // Build win-rate map
+    const map = new Map<string, { won: number; total: number }>();
+    for (const d of (dealCountsRes.data ?? []) as any[]) {
+      if (!d.contact_id) continue;
+      const entry = map.get(d.contact_id) ?? { won: 0, total: 0 };
+      entry.total++;
+      if (d.status === 'won') entry.won++;
+      map.set(d.contact_id, entry);
+    }
+    setDealCountsMap(map);
     setLoading(false);
   };
 
@@ -355,7 +387,7 @@ function ContactsContent() {
         <div className="divide-y divide-border/50">
           {filtered.map((contact) => (
             <SwipeableContactRow key={contact.id} contact={contact}>
-              <ContactRow contact={contact} onEdit={openEdit} />
+              <ContactRow contact={contact} onEdit={openEdit} winRate={dealCountsMap.get(contact.id)} />
             </SwipeableContactRow>
           ))}
         </div>

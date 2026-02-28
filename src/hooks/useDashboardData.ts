@@ -31,6 +31,14 @@ export interface RevenueDay {
   revenue: number;
 }
 
+export interface RecentActivity {
+  id: string;
+  type: string;
+  content: string | null;
+  created_at: string;
+  contact_name: string | null;
+}
+
 export function useDashboardData() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
@@ -42,6 +50,7 @@ export function useDashboardData() {
   const [dueContacts, setDueContacts] = useState<DueContact[]>([]);
   const [upcomingDeals, setUpcomingDeals] = useState<UpcomingDeal[]>([]);
   const [revenueByDay, setRevenueByDay] = useState<RevenueDay[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
@@ -133,6 +142,25 @@ export function useDashboardData() {
       }));
 
     setUpcomingDeals(upcoming);
+
+    // --- Recent activity ---
+    const { data: activityData } = await supabase
+      .from("interactions")
+      .select("id, type, content, created_at, contact_id, contacts(name)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    setRecentActivity(
+      (activityData ?? []).map((a: any) => ({
+        id: a.id,
+        type: a.type,
+        content: a.content,
+        created_at: a.created_at,
+        contact_name: a.contacts?.name ?? null,
+      }))
+    );
+
     setLoading(false);
   };
 
@@ -140,5 +168,5 @@ export function useDashboardData() {
     fetchAll();
   }, [user]);
 
-  return { stats, dueContacts, upcomingDeals, revenueByDay, loading, refetch: fetchAll };
+  return { stats, dueContacts, upcomingDeals, revenueByDay, recentActivity, loading, refetch: fetchAll };
 }

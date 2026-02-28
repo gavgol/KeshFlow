@@ -80,6 +80,11 @@ function DealCard({
 }) {
   const isOverdue = deal.due_date ? isPast(parseISO(deal.due_date)) : false;
 
+  const dealStatus = (deal as any).status as string | undefined;
+  const isWon = dealStatus === 'won';
+  const isLost = dealStatus === 'lost';
+  const isActive = !isWon && !isLost;
+
   return (
     <motion.div
       onClick={onClick}
@@ -87,7 +92,9 @@ function DealCard({
       transition={{ duration: 0.15 }}
       className={cn(
         "group cursor-pointer rounded-xl border border-border bg-card p-3.5 space-y-2.5 shadow-sm hover:shadow-md transition-shadow",
-        isDragging && "opacity-60 rotate-1 scale-105 shadow-xl"
+        isDragging && "opacity-60 rotate-1 scale-105 shadow-xl",
+        isWon && "bg-emerald-500/10 border-emerald-500/30",
+        isLost && "opacity-50 bg-muted/30"
       )}
     >
       {/* Title + Value */}
@@ -102,6 +109,16 @@ function DealCard({
 
       {/* Badges row */}
       <div className="flex flex-wrap items-center gap-1.5">
+        {isWon && (
+          <Badge className="text-[11px] rounded-full px-2 py-0.5 bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
+            נסגר ✓
+          </Badge>
+        )}
+        {isLost && (
+          <Badge variant="outline" className="text-[11px] rounded-full px-2 py-0.5 text-destructive/70 border-destructive/30 bg-destructive/5">
+            אבד
+          </Badge>
+        )}
         {deal.due_date && (
           <Badge
             variant="outline"
@@ -159,8 +176,8 @@ function DealCard({
         </a>
        )}
 
-      {/* Won / Lost actions */}
-      {onStatusChange && (
+      {/* Won / Lost actions — only on active deals */}
+      {isActive && onStatusChange && (
         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => onStatusChange(deal.id, 'won')}
@@ -534,7 +551,7 @@ function KanbanContent() {
   }, [user, fetchData]);
 
   const dealsByStage = (stageId: string) =>
-    deals.filter((d) => d.stage_id === stageId && (d as any).status !== 'won' && (d as any).status !== 'lost');
+    deals.filter((d) => d.stage_id === stageId);
 
   const handleStatusChange = async (dealId: string, status: 'won' | 'lost') => {
     const { error } = await supabase.from("deals").update({ status } as any).eq("id", dealId);
