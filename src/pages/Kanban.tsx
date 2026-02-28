@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { DealDetailSheet } from "@/components/DealDetailSheet";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { CustomField } from "@/components/CustomFieldsEditor";
@@ -469,11 +470,12 @@ function KanbanContent() {
   const [contacts, setContacts] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
+   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [newDealSheet, setNewDealSheet] = useState<{
     open: boolean;
     stageId: string | null;
   }>({ open: false, stageId: null });
+  const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -715,9 +717,7 @@ function KanbanContent() {
                 stage={stage}
                 deals={dealsByStage(stage.id)}
                 onAddDeal={(stageId) => setNewDealSheet({ open: true, stageId })}
-                onDealClick={() => {
-                  /* TODO: open deal detail sheet */
-                }}
+                onDealClick={(deal) => setDetailDeal(deal)}
                 isLastColumn={stage.id === lastStageId}
                 onStatusChange={handleStatusChange}
               />
@@ -753,6 +753,14 @@ function KanbanContent() {
         onClose={() => setNewDealSheet({ open: false, stageId: null })}
         onSaved={fetchData}
         customFieldsSchema={(profile?.custom_fields_schema as CustomField[]) ?? []}
+      />
+
+      <DealDetailSheet
+        deal={detailDeal}
+        stages={stages}
+        open={!!detailDeal}
+        onClose={() => setDetailDeal(null)}
+        onDealUpdated={fetchData}
       />
     </div>
   );
