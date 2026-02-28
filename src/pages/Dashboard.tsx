@@ -31,6 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { ContactDetailSheet } from "@/components/ContactDetailSheet";
+import { MiniReminderPopover } from "@/components/MiniReminderPopover";
 import { Tables } from "@/integrations/supabase/types";
 import {
   AreaChart,
@@ -272,6 +273,11 @@ function Dashboard() {
                         <MessageCircle className="h-4 w-4" />
                       </a>
                     )}
+                    <MiniReminderPopover defaultTitle={`מעקב עם ${contact.name}`} contactId={contact.id}>
+                      <button className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors" title="תזכורת">
+                        <Bell className="h-4 w-4" />
+                      </button>
+                    </MiniReminderPopover>
                     <Button size="sm" variant="ghost" className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground" onClick={() => snoozeContact(contact.id)}>דחה</Button>
                     <Button size="sm" className="h-8 px-2 text-xs" onClick={() => markContacted(contact.id)}>בוצע</Button>
                   </div>

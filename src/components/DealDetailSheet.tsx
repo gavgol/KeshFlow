@@ -37,7 +37,9 @@ import {
   RotateCcw,
   Trophy,
   Check,
+  Bell,
 } from "lucide-react";
+import { MiniReminderPopover } from "@/components/MiniReminderPopover";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
@@ -183,13 +185,16 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
               className="text-xl font-bold h-auto py-1"
             />
           ) : (
-            <h2
-              className="text-xl font-bold cursor-pointer hover:text-primary/80 transition-colors truncate"
-              onClick={() => setEditingTitle(true)}
-              title="לחץ לעריכה"
-            >
-              {deal.title}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2
+                className="text-xl font-bold cursor-pointer hover:text-primary/80 transition-colors truncate flex-1"
+                onClick={() => setEditingTitle(true)}
+                title="לחץ לעריכה"
+              >
+                {deal.title}
+              </h2>
+              <MiniReminderPopover defaultTitle={`מעקב על ${deal.title}`} dealId={deal.id} contactId={deal.contact_id} />
+            </div>
           )}
 
           {/* Stage + Status + Value row */}
