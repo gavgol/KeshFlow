@@ -55,7 +55,6 @@ function getFollowUpStatus(contact: Contact): "overdue" | "soon" | "ok" | "none"
 const statusBadge: Record<string, { label: string; className: string }> = {
   overdue: { label: "פג תוקף", className: "bg-destructive/10 text-destructive border-destructive/30" },
   soon: { label: "בקרוב", className: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
-  ok: { label: "בסדר", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
 };
 
 interface DealRow {

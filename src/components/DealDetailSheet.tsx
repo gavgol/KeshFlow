@@ -361,7 +361,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
         </div>
 
         {/* BOTTOM ACTION BAR */}
-        <div className="sticky bottom-0 border-t border-border bg-background p-4">
+        <div className="sticky bottom-0 border-t border-border bg-background p-4 z-20">
           {localStatus === "active" && (
             <div className="flex gap-2">
               <Button

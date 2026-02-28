@@ -490,6 +490,14 @@ function KanbanContent() {
   }>({ open: false, stageId: null });
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
 
+  // Keep detailDeal in sync with deals array after refetch
+  useEffect(() => {
+    if (detailDeal) {
+      const updated = deals.find((d) => d.id === detailDeal.id);
+      if (updated) setDetailDeal(updated);
+    }
+  }, [deals]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
