@@ -321,10 +321,10 @@ function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* FAB — positioned within the content area, not fixed to screen */}
+      {/* FAB */}
       <button
         onClick={() => setFabOpen(true)}
-        className="sticky bottom-4 start-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95"
+        className="fixed bottom-20 end-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-6"
         aria-label="הוספה מהירה"
       >
         <Plus className="h-6 w-6" />

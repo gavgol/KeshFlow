@@ -32,7 +32,7 @@ export default function Auth() {
       });
       if (error) toast.error(error.message);
       else {
-        toast.success("Account created! Signing you in...");
+        toast.success("החשבון נוצר! מתחבר...");
         navigate("/dashboard");
       }
     }

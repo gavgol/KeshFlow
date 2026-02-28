@@ -117,16 +117,18 @@ export function useDashboardData() {
     });
     setRevenueByDay(days);
 
-    // --- Fetch last interactions for due contacts ---
-    const { data: lastInteractions } = await supabase
+    // --- Fetch interactions once for both lastInteractionMap and recentActivity ---
+    const { data: allInteractions } = await supabase
       .from("interactions")
-      .select("contact_id, content, created_at, type")
+      .select("id, contact_id, type, content, created_at, contacts(name)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(100);
 
+    const interactionsList = allInteractions ?? [];
+
     const lastInteractionMap = new Map<string, string | null>();
-    (lastInteractions ?? []).forEach((i: any) => {
+    interactionsList.forEach((i: any) => {
       if (!lastInteractionMap.has(i.contact_id) && i.content) {
         lastInteractionMap.set(i.contact_id, i.content);
       }
@@ -162,16 +164,9 @@ export function useDashboardData() {
 
     setUpcomingDeals(upcoming);
 
-    // --- Recent activity ---
-    const { data: activityData } = await supabase
-      .from("interactions")
-      .select("id, type, content, created_at, contact_id, contacts(name)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(8);
-
+    // --- Recent activity (derived from same query) ---
     setRecentActivity(
-      (activityData ?? []).map((a: any) => ({
+      interactionsList.slice(0, 8).map((a: any) => ({
         id: a.id,
         type: a.type,
         content: a.content,

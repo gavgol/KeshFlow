@@ -30,6 +30,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -99,35 +100,49 @@ function ContactRow({ contact, onEdit, onDetail, winRate }: { contact: Contact; 
       </div>
       {/* Action buttons */}
       <div className="flex items-center gap-1 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-        {contact.phone && (
-          <a
-            href={`tel:${contact.phone}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Call"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Phone className="h-3.5 w-3.5" />
-          </a>
-        )}
-        {phone && (
-          <a
-            href={buildWhatsAppUrl(contact.phone!, contact.name)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors"
-            title="WhatsApp"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-          </a>
-        )}
-        <button
-          onClick={() => onEdit(contact)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title="Edit"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
+        <TooltipProvider delayDuration={200}>
+          {contact.phone && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href={`tel:${contact.phone}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>חייג</TooltipContent>
+            </Tooltip>
+          )}
+          {phone && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href={buildWhatsAppUrl(contact.phone!, contact.name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>שלח WhatsApp</TooltipContent>
+            </Tooltip>
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>ערוך</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </motion.div>
   );
@@ -398,10 +413,10 @@ function ContactsContent() {
         </div>
       )}
 
-      {/* FAB — sticky within content */}
+      {/* FAB */}
       <button
         onClick={openNew}
-        className="sticky bottom-4 start-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 ms-4 mb-4"
+        className="fixed bottom-20 end-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-6"
         aria-label="Add contact"
       >
         <Plus className="h-6 w-6" />
