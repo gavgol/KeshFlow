@@ -379,8 +379,19 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
             </div>
           )}
           {deal.status === "won" && (
-            <div className="flex items-center justify-center gap-2 text-emerald-600 font-medium">
-              <Trophy className="h-5 w-5" /> עסקה נסגרה
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center justify-center gap-2 text-emerald-600 font-medium">
+                <Trophy className="h-5 w-5" /> עסקה נסגרה
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 shrink-0"
+                onClick={() => handleStatusChange("active")}
+                disabled={updating}
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> בטל
+              </Button>
             </div>
           )}
           {deal.status === "lost" && (
