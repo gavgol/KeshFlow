@@ -27,6 +27,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { ContactDetailSheet } from "@/components/ContactDetailSheet";
+import { Tables } from "@/integrations/supabase/types";
 import {
   AreaChart,
   Area,
@@ -138,6 +140,16 @@ function Dashboard() {
   const navigate = useNavigate();
   const { stats, dueContacts, upcomingDeals, revenueByDay, recentActivity, loading, refetch } = useDashboardData();
   const [fabOpen, setFabOpen] = useState(false);
+  const [detailContact, setDetailContact] = useState<Tables<"contacts"> | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openContactDetail = async (contactId: string) => {
+    const { data } = await supabase.from("contacts").select("*").eq("id", contactId).single();
+    if (data) {
+      setDetailContact(data);
+      setDetailOpen(true);
+    }
+  };
 
   const markContacted = async (contactId: string) => {
     if (!user) return;
@@ -202,7 +214,7 @@ function Dashboard() {
                     {contact.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">{contact.name}</p>
+                    <button className="truncate text-sm font-medium hover:underline text-start" onClick={() => openContactDetail(contact.id)}>{contact.name}</button>
                     <p className="text-xs text-muted-foreground">{contact.phone ?? "אין טלפון"}</p>
                   </div>
                   <div className="flex items-center gap-1">
@@ -323,6 +335,13 @@ function Dashboard() {
         onClose={() => setFabOpen(false)}
         onNewContact={() => { setFabOpen(false); navigate("/contacts?new=1"); }}
         onNewDeal={() => { setFabOpen(false); navigate("/kanban?new=1"); }}
+      />
+
+      <ContactDetailSheet
+        open={detailOpen}
+        contact={detailContact}
+        onClose={() => setDetailOpen(false)}
+        onContactUpdated={refetch}
       />
     </div>
   );

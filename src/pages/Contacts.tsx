@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { differenceInDays, parseISO, format } from "date-fns";
 import { Tables } from "@/integrations/supabase/types";
+import { ContactDetailSheet } from "@/components/ContactDetailSheet";
 
 type Contact = Tables<"contacts">;
 
@@ -48,7 +49,7 @@ function getFollowUpStatus(contact: Contact): "overdue" | "soon" | "ok" | "none"
   return "ok";
 }
 
-function ContactRow({ contact, onEdit, winRate }: { contact: Contact; onEdit: (c: Contact) => void; winRate?: { won: number; total: number } }) {
+function ContactRow({ contact, onEdit, onDetail, winRate }: { contact: Contact; onEdit: (c: Contact) => void; onDetail: (c: Contact) => void; winRate?: { won: number; total: number } }) {
   const status = getFollowUpStatus(contact);
   const phone = contact.phone?.replace(/\D/g, "") ?? "";
 
@@ -57,7 +58,8 @@ function ContactRow({ contact, onEdit, winRate }: { contact: Contact; onEdit: (c
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18 }}
-      className="group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted/40"
+      className="group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted/40 cursor-pointer"
+      onClick={() => onDetail(contact)}
     >
       <ContactAvatar name={contact.name} />
       <div className="flex-1 min-w-0">
@@ -275,6 +277,8 @@ function ContactsContent() {
   const [search, setSearch] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [detailContact, setDetailContact] = useState<Contact | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const fetchContacts = async () => {
     if (!user) return;
@@ -319,6 +323,7 @@ function ContactsContent() {
 
   const openNew = () => { setEditContact(null); setSheetOpen(true); };
   const openEdit = (c: Contact) => { setEditContact(c); setSheetOpen(true); };
+  const openDetail = (c: Contact) => { setDetailContact(c); setDetailOpen(true); };
 
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
@@ -387,7 +392,7 @@ function ContactsContent() {
         <div className="divide-y divide-border/50">
           {filtered.map((contact) => (
             <SwipeableContactRow key={contact.id} contact={contact}>
-              <ContactRow contact={contact} onEdit={openEdit} winRate={dealCountsMap.get(contact.id)} />
+              <ContactRow contact={contact} onEdit={openEdit} onDetail={openDetail} winRate={dealCountsMap.get(contact.id)} />
             </SwipeableContactRow>
           ))}
         </div>
@@ -407,6 +412,13 @@ function ContactsContent() {
         contact={editContact}
         onClose={() => setSheetOpen(false)}
         onSaved={fetchContacts}
+      />
+
+      <ContactDetailSheet
+        open={detailOpen}
+        contact={detailContact}
+        onClose={() => setDetailOpen(false)}
+        onContactUpdated={fetchContacts}
       />
     </div>
   );
