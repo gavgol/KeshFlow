@@ -57,6 +57,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -181,18 +182,30 @@ function DealCard({
       {/* Won / Lost actions — only on active deals */}
       {isActive && onStatusChange && (
         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => onStatusChange(deal.id, 'won')}
-            className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
-          >
-            <CheckCircle className="h-3.5 w-3.5" /> סגור
-          </button>
-          <button
-            onClick={() => onStatusChange(deal.id, 'lost')}
-            className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
-          >
-            <XCircle className="h-3.5 w-3.5" /> אבד
-          </button>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onStatusChange(deal.id, 'won')}
+                  className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <CheckCircle className="h-3.5 w-3.5" /> סגור
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>סמן כנסגר בהצלחה</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onStatusChange(deal.id, 'lost')}
+                  className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                >
+                  <XCircle className="h-3.5 w-3.5" /> אבד
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>סמן כאבוד</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
     </motion.div>
@@ -734,12 +747,12 @@ function KanbanContent() {
         </DragOverlay>
       </DndContext>
 
-      {/* FAB — sticky within content */}
+      {/* FAB */}
       <button
         onClick={() =>
           setNewDealSheet({ open: true, stageId: stages[0]?.id ?? null })
         }
-        className="sticky bottom-4 start-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 ms-4 mb-4"
+        className="fixed bottom-20 end-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all active:scale-95 md:bottom-6"
         aria-label="Add deal"
       >
         <Plus className="h-6 w-6" />
