@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link2, Copy, Check, ExternalLink, Upload, ImageIcon, Loader2, Trash2, Code2, Settings2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import CustomFieldsEditor, { type CustomField } from "@/components/CustomFieldsEditor";
@@ -25,6 +25,13 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const logoUrl = (profile as any)?.business_logo_url as string | null;
+
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name ?? "");
+      setBusinessName(profile.business_name ?? "");
+    }
+  }, [profile?.user_id]);
 
   const slug = (profile?.business_name ?? "")
     .toLowerCase()
