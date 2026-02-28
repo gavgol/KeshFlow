@@ -29,6 +29,7 @@ import {
   Users,
   Loader2,
   X,
+  Download,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -340,6 +341,7 @@ function ContactsContent() {
   const openEdit = (c: Contact) => { setEditContact(c); setSheetOpen(true); };
   const openDetail = (c: Contact) => { setDetailContact(c); setDetailOpen(true); };
 
+  // Handle ?new=1 param
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
     openNew();
@@ -347,6 +349,45 @@ function ContactsContent() {
     params.delete("new");
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  // Handle ?open=CONTACT_ID param from command palette
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (!openId || contacts.length === 0) return;
+    const found = contacts.find((c) => c.id === openId);
+    if (found) {
+      openDetail(found);
+      const params = new URLSearchParams(searchParams);
+      params.delete("open");
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, contacts]);
+
+  const handleExportCSV = () => {
+    const csvContent = [
+      ["שם", "טלפון", "אימייל", "חברה", "קשר אחרון", "תדירות מעקב"].join(","),
+      ...filtered.map(c =>
+        [
+          c.name,
+          c.phone ?? "",
+          c.email ?? "",
+          c.company ?? "",
+          c.last_contact_date ?? "",
+          c.contact_frequency_days ?? "",
+        ]
+          .map(v => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `keshflow-contacts-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("הקובץ הורד בהצלחה!");
+  };
 
   return (
     <div className="relative min-h-full p-4 md:p-6 space-y-4">
@@ -356,9 +397,14 @@ function ContactsContent() {
         <h1 className="text-2xl font-bold tracking-tight">אנשי קשר</h1>
           <p className="text-sm text-muted-foreground">לקוחות ולידים שלך.</p>
         </div>
-        <Button onClick={openNew} size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> הוסף
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleExportCSV} variant="outline" size="sm" className="gap-1.5" disabled={filtered.length === 0}>
+            <Download className="h-4 w-4" /> ייצוא CSV
+          </Button>
+          <Button onClick={openNew} size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" /> הוסף
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

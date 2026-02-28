@@ -94,8 +94,8 @@ export function CommandPalette() {
   const handleSelect = (item: SearchResult) => {
     setOpen(false);
     setQuery("");
-    if (item.type === "contact") navigate("/contacts");
-    else navigate("/kanban");
+    if (item.type === "contact") navigate(`/contacts?open=${item.id}`);
+    else navigate(`/kanban?deal=${item.id}`);
   };
 
   return (

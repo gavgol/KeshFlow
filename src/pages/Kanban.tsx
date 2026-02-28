@@ -539,6 +539,7 @@ function KanbanContent() {
     fetchData();
   }, [fetchData]);
 
+  // Handle ?new=1 param
   useEffect(() => {
     if (searchParams.get("new") !== "1" || stages.length === 0) return;
     setNewDealSheet({ open: true, stageId: stages[0]?.id ?? null });
@@ -546,6 +547,19 @@ function KanbanContent() {
     params.delete("new");
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams, stages]);
+
+  // Handle ?deal=DEAL_ID param from command palette
+  useEffect(() => {
+    const dealId = searchParams.get("deal");
+    if (!dealId || deals.length === 0) return;
+    const found = deals.find((d) => d.id === dealId);
+    if (found) {
+      setDetailDeal(found);
+      const params = new URLSearchParams(searchParams);
+      params.delete("deal");
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, deals]);
 
   // Realtime subscription — new deals appear instantly
   useEffect(() => {
