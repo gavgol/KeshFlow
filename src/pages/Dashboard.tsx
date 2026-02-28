@@ -1,5 +1,6 @@
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useProfile } from "@/hooks/useProfile";
+import { useReminders } from "@/hooks/useReminders";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ import {
   Phone,
   Mail,
   RefreshCw,
+  Bell,
+  Trash2,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
@@ -138,6 +141,7 @@ function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
+  const { reminders, overdueCount, markDone, deleteReminder } = useReminders();
   const { stats, dueContacts, upcomingDeals, revenueByDay, recentActivity, loading, refetch } = useDashboardData();
   const [fabOpen, setFabOpen] = useState(false);
   const [detailContact, setDetailContact] = useState<Tables<"contacts"> | null>(null);
@@ -185,6 +189,50 @@ function Dashboard() {
         <StatCard title="הכנסות החודש" value={stats.revenueThisMonth} icon={DollarSign} prefix="₪" iconBg="bg-emerald-100 dark:bg-emerald-500/20" iconColor="text-emerald-600 dark:text-emerald-400" />
         <StatCard title="המרה" value={stats.conversionRate} icon={Trophy} prefix="" iconBg="bg-purple-100 dark:bg-purple-500/20" iconColor="text-purple-600 dark:text-purple-400" />
       </div>
+
+      {/* Reminders card */}
+      {reminders.length > 0 && (
+        <Card className="border-border shadow-sm bg-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="h-4 w-4 text-primary" />
+              תזכורות להיום
+              <Badge variant="destructive" className="ms-auto">{overdueCount}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {reminders.slice(0, 5).map((rem) => {
+                const today = format(new Date(), "yyyy-MM-dd");
+                const isOverdue = rem.due_date < today;
+                const isToday = rem.due_date === today;
+                return (
+                  <div key={rem.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Bell className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{rem.title}</p>
+                      {rem.contact_name && <p className="text-xs text-muted-foreground truncate">{rem.contact_name}</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isOverdue && <Badge className="bg-destructive/10 text-destructive border-destructive/30 text-[10px]">באיחור</Badge>}
+                      {isToday && <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">היום</Badge>}
+                      <Button size="sm" className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => markDone(rem.id)}>בוצע ✓</Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteReminder(rem.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {reminders.length > 5 && (
+                <Button variant="link" className="w-full text-sm" onClick={() => navigate("/reminders")}>הצג הכל</Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <RevenueChart data={revenueByDay} />
 

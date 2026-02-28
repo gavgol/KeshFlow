@@ -17,6 +17,7 @@ import CalendarPage from "./pages/Calendar";
 import KanbanPage from "./pages/Kanban";
 import ContactsPage from "./pages/Contacts";
 import SettingsPage from "./pages/Settings";
+import RemindersPage from "./pages/Reminders";
 import NotFound from "./pages/NotFound";
 import BookingPage from "./pages/BookingPage";
 
@@ -45,6 +46,7 @@ const App = () => (
                   <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/kanban" element={<KanbanPage />} />
                   <Route path="/contacts" element={<ContactsPage />} />
+                  <Route path="/reminders" element={<RemindersPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Route>
 

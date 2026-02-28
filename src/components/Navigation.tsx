@@ -10,6 +10,7 @@ import {
   Sun,
   Search,
   LogOut,
+  Bell,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +21,7 @@ const navItems = [
   { to: "/calendar", label: "יומן", icon: CalendarDays },
   { to: "/kanban", label: "לידים", icon: Columns3 },
   { to: "/contacts", label: "אנשי קשר", icon: Users },
+  { to: "/reminders", label: "תזכורות", icon: Bell },
   { to: "/settings", label: "הגדרות", icon: Settings },
 ];
 
