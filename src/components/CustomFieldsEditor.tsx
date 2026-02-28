@@ -74,7 +74,7 @@ export default function CustomFieldsEditor({ fields: initialFields, onSaved }: P
 
     const { error } = await supabase
       .from("profiles")
-      .update({ custom_fields_schema: cleaned as any })
+      .update({ custom_fields_schema: cleaned as unknown as import("@/integrations/supabase/types").Json })
       .eq("user_id", user.id);
 
     setSaving(false);

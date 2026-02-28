@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { DirectionProvider } from "@radix-ui/react-direction";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import AppLayout from "@/components/AppLayout";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -30,6 +31,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
+              <ErrorBoundary>
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<LandingPage />} />
@@ -48,6 +50,7 @@ const App = () => (
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </ErrorBoundary>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

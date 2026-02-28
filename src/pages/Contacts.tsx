@@ -295,7 +295,7 @@ function ContactsContent() {
 
     // Build win-rate map
     const map = new Map<string, { won: number; total: number }>();
-    for (const d of (dealCountsRes.data ?? []) as any[]) {
+    for (const d of dealCountsRes.data ?? []) {
       if (!d.contact_id) continue;
       const entry = map.get(d.contact_id) ?? { won: 0, total: 0 };
       entry.total++;

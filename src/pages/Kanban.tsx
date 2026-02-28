@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { CustomField } from "@/components/CustomFieldsEditor";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { ContactAvatar } from "@/components/ContactAvatar";
@@ -80,7 +81,7 @@ function DealCard({
 }) {
   const isOverdue = deal.due_date ? isPast(parseISO(deal.due_date)) : false;
 
-  const dealStatus = (deal as any).status as string | undefined;
+  const dealStatus = deal.status;
   const isWon = dealStatus === 'won';
   const isLost = dealStatus === 'lost';
   const isActive = !isWon && !isLost;
@@ -349,7 +350,7 @@ function NewDealSheet({
         contact_id: contactId === NO_CONTACT ? null : contactId,
         due_date: dueDate || null,
         custom_data: Object.keys(customData).length > 0 ? customData : null,
-      } as any);
+      });
       if (error) throw error;
       toast.success("Deal created!");
       onSaved();
@@ -555,7 +556,7 @@ function KanbanContent() {
     deals.filter((d) => d.stage_id === stageId);
 
   const handleStatusChange = async (dealId: string, status: 'won' | 'lost') => {
-    const { error } = await supabase.from("deals").update({ status } as any).eq("id", dealId);
+    const { error } = await supabase.from("deals").update({ status }).eq("id", dealId);
     if (error) {
       toast.error(error.message);
       return;
@@ -751,7 +752,7 @@ function KanbanContent() {
         contacts={contacts}
         onClose={() => setNewDealSheet({ open: false, stageId: null })}
         onSaved={fetchData}
-        customFieldsSchema={((profile as any)?.custom_fields_schema as any[]) ?? []}
+        customFieldsSchema={(profile?.custom_fields_schema as CustomField[]) ?? []}
       />
     </div>
   );

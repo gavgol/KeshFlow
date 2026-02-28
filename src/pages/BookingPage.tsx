@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { CustomField } from "@/components/CustomFieldsEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,7 +56,7 @@ export default function BookingPage() {
         .not("business_name", "is", null)
         .limit(50);
 
-      const match = (profiles ?? []).find((p: any) => {
+      const match = (profiles ?? []).find((p) => {
         const slug = (p.business_name ?? "")
           .toLowerCase()
           .replace(/\s+/g, "-")
@@ -76,15 +77,15 @@ export default function BookingPage() {
         .limit(10);
 
       const myStages = (stagesData ?? []).filter(
-        (s: any) => s.pipelines?.user_id === match.user_id
+        (s) => (s.pipelines as unknown as { user_id: string })?.user_id === match.user_id
       );
 
       setBiz({
         userId: match.user_id,
-        businessName: (match as any).business_name!,
+        businessName: match.business_name!,
         firstStageId: myStages[0]?.id ?? null,
-        logoUrl: (match as any).business_logo_url ?? null,
-        customFieldsSchema: ((match as any).custom_fields_schema as any[]) ?? [],
+        logoUrl: match.business_logo_url ?? null,
+        customFieldsSchema: (match.custom_fields_schema as unknown as CustomField[]) ?? [],
       });
       setLoading(false);
     })();
@@ -128,13 +129,14 @@ export default function BookingPage() {
         due_date: form.date || null,
         notes: form.notes.trim() || null,
         custom_data: Object.keys(customData).length > 0 ? customData : null,
-      } as any);
+      });
 
       if (dealError) throw dealError;
       sessionStorage.setItem(RATE_LIMIT_KEY, String(Date.now()));
       setSubmitted(true);
-    } catch (err: any) {
-      toast.error(err.message ?? "אירעה שגיאה. אנא נסה שוב.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "אירעה שגיאה. אנא נסה שוב.";
+      toast.error(message);
     } finally {
       setSaving(false);
     }
