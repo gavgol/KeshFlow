@@ -23,6 +23,7 @@ export interface DashboardStats {
   totalContacts: number;
   activeDeals: number;
   revenueThisMonth: number;
+  conversionRate: number;
 }
 
 export interface RevenueDay {
@@ -36,6 +37,7 @@ export function useDashboardData() {
     totalContacts: 0,
     activeDeals: 0,
     revenueThisMonth: 0,
+    conversionRate: 0,
   });
   const [dueContacts, setDueContacts] = useState<DueContact[]>([]);
   const [upcomingDeals, setUpcomingDeals] = useState<UpcomingDeal[]>([]);
@@ -65,25 +67,38 @@ export function useDashboardData() {
     const stages = stagesRes.data ?? [];
 
     const totalContacts = contacts.length;
-    const activeDeals = deals.length;
+
+    const completedNames = ["completed", "paid", "closed won", "הושלם", "שולם"];
+    const lostNames = ["lost", "cancelled", "אבוד", "בוטל"];
 
     const completedStageIds = stages
-      .filter((s) => {
-        const name = s.name.toLowerCase();
-        return ["completed", "paid", "closed won", "הושלם"].includes(name);
-      })
+      .filter((s) => completedNames.includes(s.name.toLowerCase()))
       .map((s) => s.id);
 
-    const completedDeals = deals.filter(
-      (d) => d.stage_id && completedStageIds.includes(d.stage_id)
-    );
+    const lostStageIds = stages
+      .filter((s) => lostNames.includes(s.name.toLowerCase()))
+      .map((s) => s.id);
 
-    const revenueThisMonth = completedDeals.reduce(
-      (sum, d) => sum + (d.value ?? 0),
-      0
-    );
+    const closedStageIds = [...completedStageIds, ...lostStageIds];
 
-    setStats({ totalContacts, activeDeals, revenueThisMonth });
+    const activeDeals = deals.filter(
+      (d) => !d.stage_id || !closedStageIds.includes(d.stage_id)
+    ).length;
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const wonThisMonth = deals.filter(
+      (d) => d.stage_id && completedStageIds.includes(d.stage_id) && d.updated_at >= startOfMonth
+    );
+    const revenueThisMonth = wonThisMonth.reduce((sum, d) => sum + (d.value ?? 0), 0);
+
+    const completedDeals = deals.filter((d) => d.stage_id && completedStageIds.includes(d.stage_id));
+    const lostDeals = deals.filter((d) => d.stage_id && lostStageIds.includes(d.stage_id));
+    const totalClosed = completedDeals.length + lostDeals.length;
+    const conversionRate = totalClosed > 0 ? Math.round((completedDeals.length / totalClosed) * 100) : 0;
+
+    setStats({ totalContacts, activeDeals, revenueThisMonth, conversionRate });
 
     // --- Revenue by day (last 7 days from real completed deals) ---
     const today = new Date();

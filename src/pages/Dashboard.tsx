@@ -14,6 +14,7 @@ import {
   Plus,
   Contact,
   TrendingUp,
+  Trophy,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
@@ -52,6 +53,7 @@ function StatCard({
           {typeof value === "number" && title.includes("הכנסות")
             ? value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
             : value}
+          {title === "המרה" && "%"}
         </p>
       </CardContent>
     </Card>
@@ -161,10 +163,11 @@ function Dashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard title="אנשי קשר" value={stats.totalContacts} icon={Users} iconBg="bg-blue-100 dark:bg-blue-500/20" iconColor="text-blue-600 dark:text-blue-400" />
         <StatCard title="עסקאות פעילות" value={stats.activeDeals} icon={Briefcase} iconBg="bg-amber-100 dark:bg-amber-500/20" iconColor="text-amber-600 dark:text-amber-400" />
         <StatCard title="הכנסות החודש" value={stats.revenueThisMonth} icon={DollarSign} prefix="₪" iconBg="bg-emerald-100 dark:bg-emerald-500/20" iconColor="text-emerald-600 dark:text-emerald-400" />
+        <StatCard title="המרה" value={stats.conversionRate} icon={Trophy} prefix="" iconBg="bg-purple-100 dark:bg-purple-500/20" iconColor="text-purple-600 dark:text-purple-400" />
       </div>
 
       <RevenueChart data={revenueByDay} />
