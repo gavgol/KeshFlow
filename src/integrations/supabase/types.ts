@@ -255,6 +255,57 @@ export type Database = {
         }
         Relationships: []
       }
+      reminders: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          deal_id: string | null
+          due_date: string
+          id: string
+          is_done: boolean
+          repeat_days: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          due_date: string
+          id?: string
+          is_done?: boolean
+          repeat_days?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          due_date?: string
+          id?: string
+          is_done?: boolean
+          repeat_days?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
