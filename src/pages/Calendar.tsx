@@ -244,7 +244,7 @@ function CalendarContent() {
         <h1 className="text-xl font-bold tracking-tight">יומן</h1>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1" dir="ltr">
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Select
@@ -273,7 +273,7 @@ function CalendarContent() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="h-8 w-8">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
