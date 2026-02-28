@@ -28,40 +28,51 @@ interface CreateReminderData {
 export function useReminders() {
   const { user } = useAuth();
   const [allReminders, setAllReminders] = useState<Reminder[]>([]);
+  const [completedReminders, setCompletedReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const mapRow = (r: any): Reminder => ({
+    id: r.id,
+    user_id: r.user_id,
+    contact_id: r.contact_id,
+    deal_id: r.deal_id,
+    title: r.title,
+    due_date: r.due_date,
+    repeat_days: r.repeat_days,
+    is_done: r.is_done,
+    created_at: r.created_at,
+    contact_name: r.contacts?.name ?? null,
+    deal_title: r.deals?.title ?? null,
+  });
 
   const fetchReminders = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("reminders")
-      .select("*, contacts(name), deals(title)")
-      .eq("user_id", user.id)
-      .eq("is_done", false)
-      .order("due_date", { ascending: true });
+    const [activeRes, doneRes] = await Promise.all([
+      supabase
+        .from("reminders")
+        .select("*, contacts(name), deals(title)")
+        .eq("user_id", user.id)
+        .eq("is_done", false)
+        .order("due_date", { ascending: true }),
+      supabase
+        .from("reminders")
+        .select("*, contacts(name), deals(title)")
+        .eq("user_id", user.id)
+        .eq("is_done", true)
+        .order("due_date", { ascending: false })
+        .limit(10),
+    ]);
 
-    if (error) {
-      console.error("Error fetching reminders:", error);
+    if (activeRes.error) {
+      console.error("Error fetching reminders:", activeRes.error);
       setAllReminders([]);
     } else {
-      setAllReminders(
-        (data ?? []).map((r: any) => ({
-          id: r.id,
-          user_id: r.user_id,
-          contact_id: r.contact_id,
-          deal_id: r.deal_id,
-          title: r.title,
-          due_date: r.due_date,
-          repeat_days: r.repeat_days,
-          is_done: r.is_done,
-          created_at: r.created_at,
-          contact_name: r.contacts?.name ?? null,
-          deal_title: r.deals?.title ?? null,
-        }))
-      );
+      setAllReminders((activeRes.data ?? []).map(mapRow));
     }
 
+    setCompletedReminders((doneRes.data ?? []).map(mapRow));
     setLoading(false);
   }, [user]);
 
@@ -140,6 +151,7 @@ export function useReminders() {
   return {
     reminders,
     allReminders,
+    completedReminders,
     overdueCount,
     loading,
     createReminder,
