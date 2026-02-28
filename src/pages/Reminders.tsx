@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/command";
 import { Bell, Plus, Trash2, CalendarIcon, ChevronDown, Check, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/EmptyState";
 
 /* ─── Reminder Row ─────────────────────────── */
 function ReminderCard({
@@ -342,11 +343,11 @@ export default function RemindersPage() {
         {loading ? (
           <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}</div>
         ) : allReminders.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <Bell className="h-10 w-10 text-muted-foreground" />
-            <p className="text-sm font-medium">אין תזכורות ממתינות</p>
-            <p className="text-xs text-muted-foreground">לחץ על "הוסף תזכורת" ליצירת תזכורת חדשה</p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="אין תזכורות ממתינות"
+            description="הוסף תזכורת כדי לא לפספס שום מעקב חשוב."
+          />
         ) : (
           <div className="space-y-2">
             {allReminders.map(rem => (
