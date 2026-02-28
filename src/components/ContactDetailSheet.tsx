@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ContactAvatar } from "@/components/ContactAvatar";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
+import { MiniReminderPopover } from "@/components/MiniReminderPopover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -234,6 +235,7 @@ export function ContactDetailSheet({ contact, open, onClose, onContactUpdated }:
                   <TooltipContent>התקשר</TooltipContent>
                 </Tooltip>
               )}
+              <MiniReminderPopover defaultTitle={`מעקב עם ${contact.name}`} contactId={contact.id} />
             </TooltipProvider>
 
             {badge && (

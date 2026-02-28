@@ -15,6 +15,7 @@ import {
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { openCommandPalette } from "@/components/CommandPalette";
+import { useReminders } from "@/hooks/useReminders";
 
 const navItems = [
   { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
@@ -27,6 +28,7 @@ const navItems = [
 
 export function BottomTabBar() {
   const location = useLocation();
+  const { overdueCount } = useReminders();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -36,18 +38,26 @@ export function BottomTabBar() {
             item.to === "/dashboard"
               ? location.pathname === "/dashboard"
               : location.pathname.startsWith(item.to);
+          const isReminders = item.to === "/reminders";
           return (
             <RouterNavLink
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-xs transition-colors",
+                "relative flex flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-xs transition-colors",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className="h-5 w-5" />
+              <div className="relative">
+                <item.icon className="h-5 w-5" />
+                {isReminders && overdueCount > 0 && (
+                  <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1">
+                    {overdueCount}
+                  </span>
+                )}
+              </div>
               <span className="font-medium">{item.label}</span>
             </RouterNavLink>
           );
@@ -67,6 +77,7 @@ export function DesktopSidebar({
   const location = useLocation();
   const { theme, setTheme } = useTheme();
   const { signOut } = useAuth();
+  const { overdueCount } = useReminders();
   const isDark = theme === "dark";
 
   return (
@@ -110,18 +121,26 @@ export function DesktopSidebar({
             item.to === "/dashboard"
               ? location.pathname === "/dashboard"
               : location.pathname.startsWith(item.to);
+          const isReminders = item.to === "/reminders";
           return (
             <RouterNavLink
               key={item.to}
               to={item.to}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-primary font-medium"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
+              <div className="relative shrink-0">
+                <item.icon className="h-4 w-4" />
+                {isReminders && overdueCount > 0 && (
+                  <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1">
+                    {overdueCount}
+                  </span>
+                )}
+              </div>
               {!collapsed && <span>{item.label}</span>}
             </RouterNavLink>
           );
