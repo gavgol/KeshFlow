@@ -19,6 +19,7 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PIPELINE_STAGE_DEFAULTS } from "@/lib/pipeline-defaults";
 
 const BUSINESS_TYPES = [
   {
@@ -27,12 +28,7 @@ const BUSINESS_TYPES = [
     description: "מספרה, סלון, מאמן, מטפל",
     icon: CalendarDays,
     defaultView: "calendar",
-    stages: [
-      { name: "הוזמן", color: "#6366f1", order: 0 },
-      { name: "בתהליך", color: "#f59e0b", order: 1 },
-      { name: "הושלם", color: "#10b981", order: 2 },
-      { name: "שולם", color: "#22c55e", order: 3 },
-    ],
+    stages: PIPELINE_STAGE_DEFAULTS.service,
   },
   {
     id: "project" as const,
@@ -40,13 +36,7 @@ const BUSINESS_TYPES = [
     description: "פיתוח אתרים, פרילנסר, יועץ",
     icon: Columns3,
     defaultView: "kanban",
-    stages: [
-      { name: "ליד חדש", color: "#94a3b8", order: 0 },
-      { name: "הצעת מחיר", color: "#6366f1", order: 1 },
-      { name: "בתהליך", color: "#f59e0b", order: 2 },
-      { name: "בבדיקה", color: "#8b5cf6", order: 3 },
-      { name: "הושלם", color: "#22c55e", order: 4 },
-    ],
+    stages: PIPELINE_STAGE_DEFAULTS.project,
   },
   {
     id: "sales" as const,
@@ -54,14 +44,7 @@ const BUSINESS_TYPES = [
     description: "נדל״ן, ביטוח, קמעונאות",
     icon: Target,
     defaultView: "dashboard",
-    stages: [
-      { name: "ליד חדש", color: "#94a3b8", order: 0 },
-      { name: "נוצר קשר", color: "#6366f1", order: 1 },
-      { name: "מתאים", color: "#8b5cf6", order: 2 },
-      { name: "משא ומתן", color: "#f59e0b", order: 3 },
-      { name: "נסגר בהצלחה", color: "#22c55e", order: 4 },
-      { name: "אבד", color: "#ef4444", order: 5 },
-    ],
+    stages: PIPELINE_STAGE_DEFAULTS.sales,
   },
   {
     id: "other" as const,
@@ -69,13 +52,7 @@ const BUSINESS_TYPES = [
     description: "הגדר את תהליך העבודה שלך",
     icon: HelpCircle,
     defaultView: "kanban",
-    stages: [
-      { name: "ליד חדש", color: "#94a3b8", order: 0 },
-      { name: "הצעת מחיר", color: "#6366f1", order: 1 },
-      { name: "בתהליך", color: "#f59e0b", order: 2 },
-      { name: "בבדיקה", color: "#8b5cf6", order: 3 },
-      { name: "הושלם", color: "#22c55e", order: 4 },
-    ],
+    stages: PIPELINE_STAGE_DEFAULTS.other,
   },
 ];
 

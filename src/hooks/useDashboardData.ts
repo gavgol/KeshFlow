@@ -9,6 +9,7 @@ export interface DueContact {
   phone: string | null;
   last_contact_date: string | null;
   contact_frequency_days: number | null;
+  lastInteractionContent: string | null;
 }
 
 export interface UpcomingDeal {
@@ -116,6 +117,21 @@ export function useDashboardData() {
     });
     setRevenueByDay(days);
 
+    // --- Fetch last interactions for due contacts ---
+    const { data: lastInteractions } = await supabase
+      .from("interactions")
+      .select("contact_id, content, created_at, type")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    const lastInteractionMap = new Map<string, string | null>();
+    (lastInteractions ?? []).forEach((i: any) => {
+      if (!lastInteractionMap.has(i.contact_id) && i.content) {
+        lastInteractionMap.set(i.contact_id, i.content);
+      }
+    });
+
     // --- Due contacts ---
     today.setHours(0, 0, 0, 0);
     const due = contacts.filter((c) => {
@@ -125,7 +141,10 @@ export function useDashboardData() {
       const nextDue = addDays(lastContact, freq);
       return nextDue <= today;
     });
-    setDueContacts(due as DueContact[]);
+    setDueContacts(due.map((c) => ({
+      ...c,
+      lastInteractionContent: lastInteractionMap.get(c.id) ?? null,
+    })) as DueContact[]);
 
     // --- Upcoming deals (next 3 by due_date) ---
     const contactMap = new Map(contacts.map((c) => [c.id, c.name]));

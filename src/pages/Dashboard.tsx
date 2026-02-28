@@ -207,7 +207,7 @@ function Dashboard() {
                   </div>
                   <div className="flex items-center gap-1">
                     {contact.phone && (
-                      <a href={buildWhatsAppUrl(contact.phone, contact.name)} target="_blank" rel="noopener noreferrer"
+                      <a href={buildWhatsAppUrl(contact.phone, contact.name, contact.lastInteractionContent)} target="_blank" rel="noopener noreferrer"
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--whatsapp))]/10 text-[hsl(var(--whatsapp))] hover:bg-[hsl(var(--whatsapp))]/20 transition-colors" title="WhatsApp">
                         <MessageCircle className="h-4 w-4" />
                       </a>
