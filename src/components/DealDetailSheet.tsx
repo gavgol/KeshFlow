@@ -72,6 +72,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
   const [editingValue, setEditingValue] = useState(false);
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [localStatus, setLocalStatus] = useState(deal?.status ?? "active");
   const [savedIndicator, setSavedIndicator] = useState(false);
   const [updating, setUpdating] = useState(false);
   const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,10 +83,11 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
       setTitle(deal.title);
       setValue(deal.value != null ? String(deal.value) : "");
       setNotes(deal.notes ?? "");
+      setLocalStatus(deal.status);
       setEditingTitle(false);
       setEditingValue(false);
     }
-  }, [deal?.id]);
+  }, [deal?.id, deal?.status]);
 
   const updateField = useCallback(
     async (fields: Record<string, unknown>) => {
@@ -139,6 +141,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
 
   const handleStatusChange = async (status: "active" | "won" | "lost") => {
     setUpdating(true);
+    setLocalStatus(status);
     await updateField({ status });
     if (status === "won") toast.success("העסקה נסגרה בהצלחה! 🎉");
     else if (status === "lost") toast.error("העסקה סומנה כאבודה");
@@ -156,7 +159,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
 
   if (!deal) return null;
 
-  const statusConfig = dealStatusConfig[deal.status] ?? dealStatusConfig.active;
+  const statusConfig = dealStatusConfig[localStatus] ?? dealStatusConfig.active;
   const currentStage = stages.find((s) => s.id === deal.stage_id);
 
   return (
@@ -359,7 +362,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
 
         {/* BOTTOM ACTION BAR */}
         <div className="sticky bottom-0 border-t border-border bg-background p-4">
-          {deal.status === "active" && (
+          {localStatus === "active" && (
             <div className="flex gap-2">
               <Button
                 className="flex-1 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -378,7 +381,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
               </Button>
             </div>
           )}
-          {deal.status === "won" && (
+          {localStatus === "won" && (
             <div className="flex items-center gap-2">
               <div className="flex-1 flex items-center justify-center gap-2 text-emerald-600 font-medium">
                 <Trophy className="h-5 w-5" /> עסקה נסגרה
@@ -394,7 +397,7 @@ export function DealDetailSheet({ deal, stages, open, onClose, onDealUpdated }: 
               </Button>
             </div>
           )}
-          {deal.status === "lost" && (
+          {localStatus === "lost" && (
             <Button
               variant="outline"
               className="w-full gap-1.5"
