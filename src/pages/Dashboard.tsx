@@ -15,6 +15,10 @@ import {
   Contact,
   TrendingUp,
   Trophy,
+  Clock,
+  Phone,
+  Mail,
+  RefreshCw,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
@@ -132,7 +136,7 @@ function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
-  const { stats, dueContacts, upcomingDeals, revenueByDay, loading, refetch } = useDashboardData();
+  const { stats, dueContacts, upcomingDeals, revenueByDay, recentActivity, loading, refetch } = useDashboardData();
   const [fabOpen, setFabOpen] = useState(false);
 
   const markContacted = async (contactId: string) => {
@@ -251,6 +255,55 @@ function Dashboard() {
                   {deal.value != null && <span className="text-sm font-semibold text-primary">₪{deal.value.toLocaleString()}</span>}
                 </div>
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity */}
+      <Card className="border-border shadow-sm bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="h-4 w-4 text-primary" />
+            פעילות אחרונה
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />)}</div>
+          ) : recentActivity.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <Clock className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">אין פעילות אחרונה</p>
+              <p className="text-xs text-muted-foreground">אינטראקציות עם אנשי קשר יופיעו כאן.</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {recentActivity.map((item) => {
+                const iconMap: Record<string, React.ElementType> = {
+                  whatsapp: MessageCircle, note: MessageCircle, call: Phone,
+                  email: Mail, meeting: Users, stage_change: RefreshCw,
+                };
+                const ActivityIcon = iconMap[item.type] ?? MessageCircle;
+                return (
+                  <div key={item.id} className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted/40 transition-colors">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <ActivityIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.contact_name ?? "איש קשר"}</p>
+                      {item.content && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {item.content.length > 55 ? item.content.slice(0, 55) + "…" : item.content}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                      {format(parseISO(item.created_at), "d/M · HH:mm")}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
