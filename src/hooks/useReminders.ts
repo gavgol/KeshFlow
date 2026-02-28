@@ -2,6 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, parseISO } from "date-fns";
+import type { Tables } from "@/integrations/supabase/types";
+
+type ReminderRow = Tables<"reminders"> & {
+  contacts: { name: string } | null;
+  deals: { title: string } | null;
+};
 
 export interface Reminder {
   id: string;
@@ -31,7 +37,7 @@ export function useReminders() {
   const [completedReminders, setCompletedReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const mapRow = (r: any): Reminder => ({
+  const mapRow = (r: ReminderRow): Reminder => ({
     id: r.id,
     user_id: r.user_id,
     contact_id: r.contact_id,
@@ -40,7 +46,7 @@ export function useReminders() {
     due_date: r.due_date,
     repeat_days: r.repeat_days,
     is_done: r.is_done,
-    created_at: r.created_at,
+    created_at: r.created_at ?? "",
     contact_name: r.contacts?.name ?? null,
     deal_title: r.deals?.title ?? null,
   });
@@ -69,10 +75,10 @@ export function useReminders() {
       console.error("Error fetching reminders:", activeRes.error);
       setAllReminders([]);
     } else {
-      setAllReminders((activeRes.data ?? []).map(mapRow));
+      setAllReminders(((activeRes.data ?? []) as unknown as ReminderRow[]).map(mapRow));
     }
 
-    setCompletedReminders((doneRes.data ?? []).map(mapRow));
+    setCompletedReminders(((doneRes.data ?? []) as unknown as ReminderRow[]).map(mapRow));
     setLoading(false);
   }, [user]);
 
