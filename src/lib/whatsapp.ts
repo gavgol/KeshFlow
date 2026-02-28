@@ -4,13 +4,23 @@
 export function buildWhatsAppUrl(
   phone: string,
   contactName?: string | null,
-  dealTitle?: string | null
+  dealTitleOrLastNote?: string | null,
+  lastNote?: string | null
 ): string {
   const cleanPhone = phone.replace(/\D/g, "");
   if (!cleanPhone) return "";
 
-  if (contactName && dealTitle) {
-    const cleanTitle = dealTitle.replace(/^ליד:\s*/i, "");
+  // When called with 5 args: (phone, name, dealTitle, lastNote)
+  // When called with 3 args from dashboard: (phone, name, lastNote) — lastNote is in dealTitleOrLastNote
+
+  if (contactName && lastNote) {
+    // 5-arg form: has both dealTitle and lastNote — prefer lastNote for follow-up
+    const text = `היי ${contactName}, המשך לשיחתנו — ${lastNote.slice(0, 80)}. מתי נוח לדבר?`;
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+  }
+
+  if (contactName && dealTitleOrLastNote) {
+    const cleanTitle = dealTitleOrLastNote.replace(/^ליד:\s*/i, "");
     const text = `היי ${contactName}, קיבלתי את הפנייה שלך לגבי ${cleanTitle}. אשמח לדבר על הפרטים, מתי נוח לך?`;
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
   }

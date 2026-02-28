@@ -95,6 +95,15 @@ export default function BookingPage() {
     if (!biz || !form.name.trim() || !form.phone.trim()) return;
     setSaving(true);
 
+    // Client-side rate limiting
+    const RATE_LIMIT_KEY = "keshflow_last_booking_submit";
+    const lastSubmit = sessionStorage.getItem(RATE_LIMIT_KEY);
+    if (lastSubmit && Date.now() - Number(lastSubmit) < 60000) {
+      toast.error("נא להמתין דקה לפני שליחה נוספת");
+      setSaving(false);
+      return;
+    }
+
     try {
       const { data: contactData, error: contactError } = await supabase
         .from("contacts")
@@ -122,6 +131,7 @@ export default function BookingPage() {
       } as any);
 
       if (dealError) throw dealError;
+      sessionStorage.setItem(RATE_LIMIT_KEY, String(Date.now()));
       setSubmitted(true);
     } catch (err: any) {
       toast.error(err.message ?? "אירעה שגיאה. אנא נסה שוב.");

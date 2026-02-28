@@ -467,6 +467,7 @@ function KanbanContent() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [contacts, setContacts] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [newDealSheet, setNewDealSheet] = useState<{
     open: boolean;
@@ -633,14 +634,54 @@ function KanbanContent() {
     );
   }
 
+
+
+  const handleCreateDefaultPipeline = async () => {
+    if (!user) return;
+    setCreating(true);
+    try {
+      const { getDefaultStages } = await import("@/lib/pipeline-defaults");
+      const stagesDef = getDefaultStages(profile?.business_type);
+
+      const { data: pipeline, error: pipelineError } = await supabase
+        .from("pipelines")
+        .insert({ user_id: user.id, name: "Default Pipeline" })
+        .select("id")
+        .single();
+      if (pipelineError) throw pipelineError;
+
+      const { error: stagesError } = await supabase
+        .from("pipeline_stages")
+        .insert(stagesDef.map((s) => ({
+          pipeline_id: pipeline.id,
+          name: s.name,
+          color: s.color,
+          display_order: s.order,
+        })));
+      if (stagesError) throw stagesError;
+
+      toast.success("צינור ברירת מחדל נוצר!");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message ?? "שגיאה ביצירת צינור");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (stages.length === 0) {
     return (
-      <div className="p-4 md:p-6">
-      <EmptyState
+      <div className="p-4 md:p-6 space-y-4">
+        <EmptyState
           icon={LayoutDashboard}
           title="אין צינור מכירות עדיין"
-          description="השלם את ה-onboarding כדי ליצור אוטומטית את שלבי הצינור שלך."
+          description="צור צינור ברירת מחדל כדי להתחיל לנהל עסקאות."
         />
+        <div className="flex justify-center">
+          <Button onClick={handleCreateDefaultPipeline} disabled={creating}>
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "צור צינור ברירת מחדל"}
+          </Button>
+        </div>
       </div>
     );
   }
